@@ -9,7 +9,7 @@ in a problem with 3 literals might look like [0, 0, 1] where x0 = F, x1 = F, x2 
 # ATTN DUNC AND DUSTIN: I'm doing this in an IDE on a PC, so chances are you'll have to change this line to accommodate
 # whatever your local file format is. ofc we'll eventually allow the filename to specified as input, but for now this is
 # how it is.
-test_file = r"project1-ga-pbil-for-maxsat/maxsat-problems/maxsat-crafted/MAXCUT/DIMACS_MOD/brock200_1.clq.cnf"
+test_file = r"maxsat-problems/maxsat-crafted/MAXCUT/DIMACS_MOD/brock200_1.clq.cnf"
 
 # Initialize the variables we're going to need to keep track of the length of our array of literals (vars x1,...,xn)
 # and Clauses (TF statements that we're trying to MAXSAT), Technically you don't have to initialize anything in Python,
