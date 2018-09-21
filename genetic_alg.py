@@ -1,12 +1,14 @@
 """
 1. Get the parser going.
-	i. read cnf file->determine number of literals for the size of the individuals representation 
-	ii. put the file in an array, where each item in array is one clause from the file (one line)
+	i. read cnf FILE->determine number of literals for the size of the individuals representation 
+	ii. put the FILE in an array, where each item in array is one clause from the FILE (one line)
 		a. clause ex:  ..., 8, 3, -4,... (negative values indicate that the literal is negated) 
 	iii. save the boolean values as strings
 
 
-
+Command Line arguments:
+	python3 genetic_alg.py <file name> <population size> <selection method> <crossover method> 
+		<crossover probability> <mutation probability> <number of generations> <use GA/PBIL>
 
 """
 """
@@ -14,20 +16,26 @@
         - 80 chars max per line
         - lets use underscores instead of camel case
         - function docstrings inside functions
-        - module docstring at top of each file with 
+        - module docstring at top of each FILE with 
             - authors, purpose, bugs, etc.
 """
+
 import parse_input as parse
 import sys
 import random
 
 
-file = "maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf"
+FILE = "maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf"
 def generate_initial_pop(problem, pop_size):
 	"""
-	Purpose:
+	Purpose: Generate an initial population to start the genetic algorithm with.
 	Input: 
-	Return:
+		problem: Dictionary including the following information: number of 
+			literals, number of clauses, and the clauses.
+		population_size: integer indicating the number of individuals that 
+			are needed for the initial generation.
+	Return: A list of the individuals in the population where each individual
+		is a list of randomly assigned Boolean values.
 	"""
 	population = []
 	individual = []
@@ -42,9 +50,12 @@ def generate_initial_pop(problem, pop_size):
 
 def fitness(individual, problem):
 	"""
-	Purpose:
-	Input: 
-	Return:
+	Purpose: For a given individual and the clauses for the problem, evaluate 
+		the number of correct clauses and return this number as the fitness.
+	Input: An individual representing a potential solution as a list of 
+		Boolean values.
+	Return: An integer indicating the number of clauses that the individual's
+		solution made true.
 	"""
 	fitness = 0
 	for clause in problem["clauses"]:
@@ -59,10 +70,19 @@ def fitness(individual, problem):
 	return fitness
 
 
-
-
 def rank_select(scored_generation):
-	#thanks: https://stackoverflow.com/questions/3121979/how-to-sort-list-tuple-of-lists-tuples
+	"""
+	Purpose: Use rank selection to select individuals to progress to the recombination
+		phase of the genetic algorithm.  In rank selection, individuals are sorted by
+		fitness and then assigned a rank (1st best, 2nd best, etc.).  Individuals are 
+		then choosen randomly proportional to their rank such that higher ranked 
+		individuals are more likely to be chosen.
+	Input: The current generation as a list of tuples where the first element of the 
+		tuple is the individual and the second element of the tuple is the individual's
+		score.
+	Return: List of individuals that were selected by ranked selection.
+	"""
+	#via: https://stackoverflow.com/questions/3121979/how-to-sort-list-tuple-of-lists-tuples
 	sorted_generation = sorted(scored_generation, key=lambda individual: individual[1])
 	total_rank = 0
 	for i in range(1, len(sorted_generation) + 1):
@@ -83,8 +103,29 @@ def rank_select(scored_generation):
 	return selected_individuals
 
 
-def tournament_select():
-	return
+def tournament_select(scored_generation):
+	"""
+	Purpose: Use tournament selection to determine which individuals progress
+		to the recombination phase.  Tournament selection will repeatedly choose
+		pairs from the population and then take the fitter of the two is selected.
+	Input: The current generation as a list of tuples where the first element of the 
+		tuple is the individual and the second element of the tuple is the individual's
+		score.
+	Return: List of individuals that were selected by tournament selection.
+	"""
+	selected_individuals = []
+	for i in range (0, len(scored_generation)):
+		rand_index1 = random.randint(0, len(scored_generation) - 1)
+		rand_index2 = random.randint(0, len(scored_generation) - 1)
+		individual1 = scored_generation[rand_index1]
+		individual2 = scored_generation[rand_index2]
+		#compare individual fitnesses 
+		if individual1[1] > individual2[1]:
+			selected_individuals.append(individual1[0])
+		else:
+			selected_individuals.append(individual2[0])
+
+	return selected_individuals
 
 
 def boltzmann_select():
@@ -92,12 +133,19 @@ def boltzmann_select():
 
 
 def select(scored_generation, selection_method):
+	"""
+	Purpose: Wrapper method for the selection methods.  Used to call the correct
+		selection method based on the command line argument specifying the selection
+		method.
+	Parameters: 
+	"""
 	if selection_method == "rs":
 		return rank_select(scored_generation)
 	elif selection_method == "ts":
 		return tournament_select(scored_generation)
 	elif selection_method == "bs":
 		return boltzmann_select(scored_generation)
+
 
 def recombination(selected, prob, type):
 	next_gen = []
@@ -129,11 +177,23 @@ def single_crossover(individual1, individual2):
 	print(second_child)
 	return (first_child, second_child)
 
+
 def uniform_crossover(individual1, individual2):
 	return
 
-def mutate(population):
-	return
+def mutate(population, mutation_prob):
+	"""
+	Purpose: Mutate the population!
+	Parameters: Population represented as a list of individuals where
+		each individual is a list of booleans and a probability for 
+		mutation.
+	Return: The population, but mutated!
+	"""
+	for individual in population:
+		for literal in individual:
+			if random.random() < mutation_prob:
+				literal = not literal
+	return population
 
 
 def standard_GA(problem, parameters):
@@ -152,13 +212,16 @@ def standard_GA(problem, parameters):
 			scored_generation.append((individual, score))
 		selected = select(scored_generation, parameters["selection_type"])
 		recombinated_generation = recombination(selected, parameters["crossover_prob"], parameters["crossover_method"])
+		mutated_generation = mutate(recombinated_generation, parameters["mutation_prob"])
+		del current_generation[:]
+		current_generation = mutated_generation.copy()
 	return
 
 
 def main():
 	#aquire command line arguments
 	parameters = {
-		"file_name": sys.argv[1],
+		"FILE_name": sys.argv[1],
 		"pop_size": int(sys.argv[2]),
 		"selection_type": sys.argv[3],
 		"crossover_method": sys.argv[4],
@@ -176,7 +239,7 @@ def main():
     	"clauses": problem
     }
 	#aquire MAXSAT problem
-	problem = parse.return_problem(file)
+	problem = parse.return_problem(FILE)
 	
 	solution = standard_GA(sample_problem, parameters)
 
