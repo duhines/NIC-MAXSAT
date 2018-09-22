@@ -24,7 +24,7 @@ import parse_input as parse
 import sys
 import random
 
-
+G_BEST = ([], 0)
 FILE = "maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf"
 def generate_initial_pop(problem, pop_size):
 	"""
@@ -57,6 +57,7 @@ def fitness(individual, problem):
 	Return: An integer indicating the number of clauses that the individual's
 		solution made true.
 	"""
+	global G_BEST
 	fitness = 0
 	for clause in problem["clauses"]:
 		check = False
@@ -67,6 +68,8 @@ def fitness(individual, problem):
 				check = check or not individual[abs(literal) - 1]
 		if check:
 			fitness += 1
+	if fitness > G_BEST[1]:
+		G_BEST = (individual, fitness)
 	return fitness
 
 
@@ -99,7 +102,6 @@ def rank_select(scored_generation):
 		selected = sorted_generation[increment - 1][0]
 		selected_individuals.append(selected)
 
-	print(selected_individuals)
 	return selected_individuals
 
 
@@ -147,15 +149,24 @@ def select(scored_generation, selection_method):
 		return boltzmann_select(scored_generation)
 
 
-def recombination(selected, prob, type):
+def recombination(selected, xover_prob, xover_type):
+	"""
+	Purpose: From the selected individuals, crossover by chance xover_prob to create 
+		next generation.
+	Parameters: The selected individuals from the current generation, the probability
+		of performing crossover, and the crossover type.
+	Return: The next generation of individuals!
+	"""
+	global G_BEST
 	next_gen = []
 	for i in range (0, len(selected)//2):
 		first = selected[random.randint(0, len(selected) - 1)]
 		second = selected[random.randint(0, len(selected) - 1)]
-		if random.random() < prob:
-			if type == "1c":
+		if random.random() < xover_prob:
+			if xover_type == "1c":
 				offspring = single_crossover(first, second)
 			else:
+				#what dooooooo??  <<--------------------------------------------<<<|
 				offspring = uniform_crossover(first, second)
 			next_gen.append(offspring[0])
 			next_gen.append(offspring[1]) 
@@ -165,21 +176,47 @@ def recombination(selected, prob, type):
 	return next_gen
 
 
-def single_crossover(individual1, individual2):
-	print("crossover\n")
-	print(individual1)
-	print(individual2)
-	crossover_point = random.randint(1, len(individual1)-2)
-	print(crossover_point)
+def single_crossover(individual1, individual2):	
+	"""
+	Purpose: From two individuals, use a single crossover point to produce two children.
+	Parameters: Two individuals, each representing a MAXSAT solution as a list of Boolean
+		values.
+	Return: A tuple of the two two children produced by the single point crossover.  
+	"""
+	crossover_point = random.randint(1, len(individual1) - 2)
 	first_child = individual1[:crossover_point].copy() + individual2[crossover_point:].copy()
 	second_child = individual2[:crossover_point].copy() + individual1[crossover_point:].copy()
-	print(first_child)
-	print(second_child)
 	return (first_child, second_child)
 
 
 def uniform_crossover(individual1, individual2):
-	return
+	"""
+	Purpose: Perform uniform crossover on two indiduals; each pair produces two offspring
+		by flipping a coin to determine which parent passes down the literal assignment
+		to the child
+	Parameters: The two individuals that are making children
+	Return: A tuple of the first and second children of individual1/2 
+		Note: 
+			- everyone has two children
+			- the first child is the best of the bunch
+	"""	
+	breeding_pair = (individual1, individual2)
+	first_child = []
+	worse_child = [] #@dgans, @djanderson
+
+	for index in range(0, len(breeding_pair[0])):
+		flip_for_first = random.random()
+		flip_for_second = random.random()
+		if flip_for_first < .5:
+			first_child.append(breeding_pair[0][index])
+		else:
+			first_child.append(breeding_pair[1][index])
+		if flip_for_second < .5:
+			worse_child.append(breeding_pair[0][index])
+		else:
+			worse_child.append(breeding_pair[1][index])
+
+	return (first_child, worse_child)
 
 def mutate(population, mutation_prob):
 	"""
@@ -190,18 +227,20 @@ def mutate(population, mutation_prob):
 	Return: The population, but mutated!
 	"""
 	for individual in population:
-		for literal in individual:
+		for literal in individual:			
 			if random.random() < mutation_prob:
 				literal = not literal
 	return population
 
 
 def standard_GA(problem, parameters):
+	"""
+	Purpose:
+	Parameters:
+	Return:
+	"""
 	initial_generation = generate_initial_pop(problem, parameters["pop_size"])
 
-	for individual in initial_generation:
-		print(individual)
-		print(fitness(individual, problem))
 	iteration = 0
 	current_generation = initial_generation.copy()
 	while iteration < parameters["num_generations"]:
@@ -211,10 +250,16 @@ def standard_GA(problem, parameters):
 			score = fitness(individual, problem)
 			scored_generation.append((individual, score))
 		selected = select(scored_generation, parameters["selection_type"])
-		recombinated_generation = recombination(selected, parameters["crossover_prob"], parameters["crossover_method"])
-		mutated_generation = mutate(recombinated_generation, parameters["mutation_prob"])
+		recomb_generation = recombination(selected, parameters["xover_prob"], parameters["xover_method"])
+		if G_BEST[1] == problem["num_clauses"]:
+			print("Solution found after {0} generations.".format(iteration))
+			break
+		mutated_generation = mutate(recomb_generation, parameters["mutation_prob"])
 		del current_generation[:]
 		current_generation = mutated_generation.copy()
+		print("Generation: {}".format(iteration))
+
+	print("\n{0}\nIs best solution with score: {1}".format(G_BEST[0], G_BEST[1]))
 	return
 
 
@@ -224,15 +269,19 @@ def main():
 		"FILE_name": sys.argv[1],
 		"pop_size": int(sys.argv[2]),
 		"selection_type": sys.argv[3],
-		"crossover_method": sys.argv[4],
-		"crossover_prob": float(sys.argv[5]),
+		"xover_method": sys.argv[4],
+		"xover_prob": float(sys.argv[5]),
 		"mutation_prob": float(sys.argv[6]),
 		"num_generations": int(sys.argv[7]),
 		"algorithm": sys.argv[2]
 	}
+
 	if parameters["pop_size"] % 2 != 0:
 		parameters["pop_size"] += 1
-	problem = [[1, -4], [-2, -3], [4, 1], [-4, 4], [-3, 1], [-1, 2], [1, 1], [-1, -1]]
+	"""
+	**For testing purposes only**
+	"""
+	problem = [[1, -4], [-2, -3], [4, 1], [-4, 4], [-3, 1], [-1, 2], [1, 1], [-1, 1]]
 	sample_problem = {
     	"num_literals": 4,
     	"num_clauses": 8,
@@ -241,9 +290,7 @@ def main():
 	#aquire MAXSAT problem
 	problem = parse.return_problem(FILE)
 	
-	solution = standard_GA(sample_problem, parameters)
-
-	print(problem["num_literals"])
+	solution = standard_GA(problem, parameters)
 	
 
 main()
