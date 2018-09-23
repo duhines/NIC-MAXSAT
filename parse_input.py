@@ -1,22 +1,17 @@
-'''
-General things to keep in mind:
+"""
+Parse_input.py
+Authors: David Anderson, Dustin Hines, Duncan Gans
+Purpose: Functions for parsing .cnf ASCII files into a list containing all
+clauses within the file. Clauses are represented as indices of a solution
+array, with negation being represented by a negative index.
+Notes:
 * Individuals are represented as arrays of literals with a binary 0 or 1 
     (F or T) value. For example, an individual in a problem with 3 literals 
     might look like [0, 0, 1] where x0 = F, x1 = F, x2 = T.
 * Clauses are represented as arrays indices specifying which indexes in an
     individual to test. For example, clause [1, 0] would translate as 'x1 | x0'
     and would be false for the example individual above.
-'''
 
-# ATTN DUNC AND DUSTIN: I'm doing this in an IDE on a PC, so chances are you'll
-#   have to change this line to accommodate whatever your local file format is. 
-#   ofc we'll eventually allow the filename to specified as input, but for now 
-#   this is how it is.
-# NOTE: this should stay the same as long as we're all working from a clone of 
-#   the repo!
-
-
-"""
     STYLE: 
         - 80 chars max per line
         - lets use underscores instead of camel case
@@ -25,14 +20,14 @@ General things to keep in mind:
             - authors, purpose, bugs, etc.
 """
 
-#Initialize the variables we're going to need to keep track of the length of
+# Initialize the variables we're going to need to keep track of the length of
 #   our array of literals (vars x1,...,xn) and Clauses (TF statements that 
 #   we're trying to MAXSAT), Technically you don't have to initialize anything
 #   in Python, but I like the structure it lends the program.
 
 num_literals = 0  # To be set upon file Parsing
 num_clauses = 0  # To be set upon file Parsing
-clause_list = [] # Initializing a variable
+clause_list = []  # Initializing a variable
 
 def get_num_clauses(filename):
     '''
@@ -50,7 +45,7 @@ def get_num_clauses(filename):
 
 def make_array_of_clauses(filename):
     '''
-    Take a cnf file and return an list containing all the clauses from the 
+    Take a cnf file and return a list containing all the clauses from the
     file. The clause array is formatted as an array of arrays, with each 
     subarray being a clause. You can think of each sub array as consisting
     of N truth functional vars represented as indices for our literals list.
@@ -74,7 +69,9 @@ def make_array_of_clauses(filename):
 
 def return_problem(file_name):
     """
-    Purpose:
+    Purpose: Return the whole problem as a dictionary. Number of literals,
+    # of clauses, and the clauses themselves are all values corresponding
+    to particular keys.
     Parameters:
     Return:
     """
