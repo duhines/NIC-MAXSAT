@@ -24,9 +24,41 @@ import parse_input as parse
 import sys
 import random
 
+FILE = "problems/"
+
+class Parameters:
+    def __init__(self, file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm):
+        self.file_name = file_name
+        self.pop_size = int(pop_size)
+        self.selection_type = selection_type 
+        self.xover_method = xover_method
+        self.xover_prob = float(xover_prob)
+        self.mutation_prob = float(mutation_prob)
+        self.num_generations = int(num_generations)
+        self.algorithm = algorithm
+
+
+class Population:
+    def __init__(self, generation, individuals, size):
+        self.generation = generation
+        self.individuals = individuals
+        self.size = size
+
+
+class Individual:
+    def __init__(self, bools_array, fitness):
+        self.solution = bools_array
+        self.fitness = fitness
+
+
+
+class BestSoFar:
+    def __init__(self, individual, iteration):
+        self.individual = individual
+        self.iteration_found = iteration
+
 # Variable to monitor the "Global Best" solution that will be returned:
 G_BEST = ([], 0)
-FILE = "maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf"
 def generate_initial_pop(problem, pop_size):
     """
     Purpose: Generate an initial population to start the genetic algorithm with.
@@ -48,30 +80,6 @@ def generate_initial_pop(problem, pop_size):
 
     return population
 
-
-def fitness(individual, problem):
-    """
-    Purpose: For a given individual and the clauses for the problem, evaluate
-        the number of correct clauses and return this number as the fitness.
-    Input: An individual representing a potential solution as a list of
-        Boolean values.
-    Return: An integer indicating the number of clauses that the individual's
-        solution made true.
-    """
-    global G_BEST
-    fitness = 0
-    for clause in problem["clauses"]:
-        check = False
-        for literal in clause:
-            if literal > 0:
-                check = check or individual[literal - 1]
-            else:
-                check = check or not individual[abs(literal) - 1]
-        if check:
-            fitness += 1
-    if fitness > G_BEST[1]:
-        G_BEST = (individual, fitness)
-    return fitness
 
 
 def rank_select(scored_generation):
@@ -104,6 +112,31 @@ def rank_select(scored_generation):
         selected_individuals.append(selected)
 
     return selected_individuals
+
+
+def fitness(individual, problem):
+    """
+    Purpose: For a given individual and the clauses for the problem, evaluate
+        the number of correct clauses and return this number as the fitness.
+    Input: An individual representing a potential solution as a list of
+        Boolean values.
+    Return: An integer indicating the number of clauses that the individual's
+        solution made true.
+    """
+    global G_BEST
+    fitness = 0
+    for clause in problem["clauses"]:
+        check = False
+        for literal in clause:
+            if literal > 0:
+                check = check or individual[literal - 1]
+            else:
+                check = check or not individual[abs(literal) - 1]
+        if check:
+            fitness += 1
+    if fitness > G_BEST[1]:
+        G_BEST = (individual, fitness)
+    return fitness
 
 
 def tournament_select(scored_generation):
@@ -240,22 +273,22 @@ def standard_GA(problem, parameters):
     Parameters:
     Return:
     """
-    initial_generation = generate_initial_pop(problem, parameters["pop_size"])
+    initial_generation = generate_initial_pop(problem, parameters.pop_size)
 
     iteration = 0
     current_generation = initial_generation.copy()
-    while iteration < parameters["num_generations"]:
+    while iteration < parameters.num_generations:
         iteration += 1
         scored_generation = []
         for individual in current_generation:
             score = fitness(individual, problem)
             scored_generation.append((individual, score))
-        selected = select(scored_generation, parameters["selection_type"])
-        recomb_generation = recombination(selected, parameters["xover_prob"], parameters["xover_method"])
+        selected = select(scored_generation, parameters.selection_type)
+        recomb_generation = recombination(selected, parameters.xover_prob, parameters.xover_method)
         if G_BEST[1] == problem["num_clauses"]:
             print("Solution found after {0} generations.".format(iteration))
             break
-        mutated_generation = mutate(recomb_generation, parameters["mutation_prob"])
+        mutated_generation = mutate(recomb_generation, parameters.mutation_prob)
         del current_generation[:]
         current_generation = mutated_generation.copy()
         print("Generation: {}".format(iteration))
@@ -266,19 +299,10 @@ def standard_GA(problem, parameters):
 
 def main():
     # acquire command line arguments
-    parameters = {
-        "FILE_name": sys.argv[1],
-        "pop_size": int(sys.argv[2]),
-        "selection_type": sys.argv[3],
-        "xover_method": sys.argv[4],
-        "xover_prob": float(sys.argv[5]),
-        "mutation_prob": float(sys.argv[6]),
-        "num_generations": int(sys.argv[7]),
-        "algorithm": sys.argv[2]
-    }
+    parameters = Parameters(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],sys.argv[8])            
 
-    if parameters["pop_size"] % 2 != 0:
-        parameters["pop_size"] += 1
+    if parameters.pop_size % 2 != 0:
+        parameters.pop_size += 1
     """
     **For testing purposes only**
     """
@@ -290,7 +314,7 @@ def main():
     }
 
     # Acquire MAXSAT problem
-    problem = parse.return_problem(FILE)
+    problem = parse.return_problem(FILE + parameters.file_name)
 
     solution = standard_GA(problem, parameters)
 
