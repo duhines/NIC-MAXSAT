@@ -63,7 +63,6 @@ def make_array_of_clauses(filename):
                 for literal in clause_as_strings:
                     clause_as_ints.append(int(literal)) 
                 clauses.append(clause_as_ints)
-        print(clauses)
         return clauses
 
 
