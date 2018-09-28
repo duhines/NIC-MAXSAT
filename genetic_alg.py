@@ -51,7 +51,6 @@ class Individual:
         self.fitness = fitness
 
 
-
 class BestSoFar:
     def __init__(self, individual, iteration):
         self.individual = individual
