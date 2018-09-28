@@ -48,7 +48,7 @@ class Population:
     def next_generation(self):
         self.generation = self.generation + 1
 
-    def generate_initial_pop(self, problem):
+    def generate_initial_pop(self, num_literals):
         """
         Purpose: Generate an initial population to start the genetic algorithm with.
         Input:
@@ -62,7 +62,7 @@ class Population:
         population = []
         solution = []
         for i in range(0, self.pop_size):  # Make N individuals
-            for j in range(0, problem["num_literals"]):  # Make indivs. proper len
+            for j in range(0, num_literals):  # Make indivs. proper len
                 solution.append(random.random() > .5)
             new_individual = Individual(solution.copy())
             population.append(new_individual)  # Copy so we don't lose reference
@@ -71,9 +71,11 @@ class Population:
 
         self.individuals = population
 
-    def score_individuals(self):
+    def score_individuals(self, best_so_far):
         for individual in self.individuals:
-            individual.get_fitness(MAXSAT_PROBLEM) 
+            individual.get_fitness(MAXSAT_PROBLEM)
+            best_so_far.compare_to_best(individual, self.generation)
+            
 
     def select(self, selection_method):
         """
@@ -266,14 +268,13 @@ class BestSoFar:
         self.individual = individual
         self.iteration_found = iteration
 
-    def compare_to_best(self, individuals, iteration):
-        for individual in individuals:
-            if individual.fitness > self.individual.fitness:
-                self.individual.solution = individual.solution.copy()
-                self.individual.fitness = individual.fitness
-                self.iteration_found = iteration
-                print("Found new best with score {} in generation {}".format(self.individual.fitness, self.iteration_found))
-                return True
+    def compare_to_best(self, individual, iteration):
+        if individual.fitness > self.individual.fitness:
+            self.individual.solution = individual.solution.copy()
+            self.individual.fitness = individual.fitness
+            self.iteration_found = iteration
+            print("Found new best with score {} in generation {}".format(self.individual.fitness, self.iteration_found))
+            return True
 
         return False
 
@@ -307,10 +308,10 @@ def standard_GA(problem, parameters):
     Parameters:
     Return:
     """
-    print(MAXSAT_PROBLEM)
     population = Population(0, parameters.pop_size)
-    population.generate_initial_pop(MAXSAT_PROBLEM)
+    population.generate_initial_pop(MAXSAT_PROBLEM["num_literals"])
     population.individuals[0].get_fitness(MAXSAT_PROBLEM)
+    #arbitrarily initialize best_so_far
     best_so_far = BestSoFar(population.individuals[0], 0)
     if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
         print("Full Solution!")
@@ -318,35 +319,45 @@ def standard_GA(problem, parameters):
         return
     iteration = 0
     while iteration < parameters.num_generations:
+        """debugging
         print("beginning")
         for individual in population.individuals:
             print(individual.solution)
+        """
         population.next_generation()
-        population.score_individuals()
+        population.score_individuals(best_so_far)
+        #check if we have found a solution
+        if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
+                print("Full Solution!")
+                print_solution(best_so_far, problem, parameters)
+                return
+        """debugging
         print("after score")
         for individual in population.individuals:
             print(individual.solution)
         #print(population.individuals)
-        if best_so_far.compare_to_best(population.individuals, iteration):
-            if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
-                print("Full Solution!")
-                print_solution(best_so_far, problem, parameters)
-                return
+        """
         population.select(parameters.selection_type)
+        """debugging
         print("after select")
         for individual in population.individuals:
             print(individual.solution)
         #print(population.individuals)
+        """
         population.recombination(parameters.xover_prob, parameters.xover_method)
+        """debugging
         print("after recombination")
         for individual in population.individuals:
             print(individual.solution)
         #print(population.individuals)
+        """
         population.mutate(parameters.mutation_prob)
+        """debugging
         print("after mutate")
         for individual in population.individuals:
             print(individual.solution)
         #print(population.individuals)
+        """
         iteration = iteration + 1
         print("Generation: {}".format(iteration))
         
@@ -372,8 +383,8 @@ def main():
     }
 
     # Acquire MAXSAT problem
-    MAXSAT_PROBLEM = sample_problem
-    #MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)
+    #MAXSAT_PROBLEM = sample_problem
+    MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)
     solution = standard_GA(problem, parameters)
 
 
