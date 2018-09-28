@@ -21,6 +21,7 @@ class PopulationVector:
             del individual[:]
         return population
 
+
     # A method to update the probability vector based on the N best individuals
     def update_vector(self, scored_pop, ind_to_incl, alpha):
         for individual in scored_pop[0:ind_to_incl]:
@@ -29,6 +30,16 @@ class PopulationVector:
                     self.vector[i] = self.vector[i](1 - alpha) + alpha
                 else:
                     self.vector[i] = self.vector[i](1 - alpha)
+
+
+    # Mutate pop vector. Mu := P(mutation). Shift := degree of mutation
+    def mutate_vector(self, mu, shift):
+        for prob in self.vector:
+            if random.random() < mu:
+                if random.random() < 0.5:
+                    prob += shift
+                else:
+                    prob -= shift
 
 
 def score_pop(population, problem):
