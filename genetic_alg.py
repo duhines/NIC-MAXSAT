@@ -44,7 +44,8 @@ class Population:
     def __init__(self, generation, pop_size):
         self.generation = generation
         self.pop_size = pop_size
-
+        self.individuals = []
+        
     def next_generation(self):
         self.generation = self.generation + 1
 
@@ -317,13 +318,9 @@ def standard_GA(problem, parameters):
         print("Full Solution!")
         print_solution(best_so_far, problem, parameters)
         return
+
     iteration = 0
     while iteration < parameters.num_generations:
-        """debugging
-        print("beginning")
-        for individual in population.individuals:
-            print(individual.solution)
-        """
         population.next_generation()
         population.score_individuals(best_so_far)
         #check if we have found a solution
@@ -331,33 +328,9 @@ def standard_GA(problem, parameters):
                 print("Full Solution!")
                 print_solution(best_so_far, problem, parameters)
                 return
-        """debugging
-        print("after score")
-        for individual in population.individuals:
-            print(individual.solution)
-        #print(population.individuals)
-        """
         population.select(parameters.selection_type)
-        """debugging
-        print("after select")
-        for individual in population.individuals:
-            print(individual.solution)
-        #print(population.individuals)
-        """
         population.recombination(parameters.xover_prob, parameters.xover_method)
-        """debugging
-        print("after recombination")
-        for individual in population.individuals:
-            print(individual.solution)
-        #print(population.individuals)
-        """
         population.mutate(parameters.mutation_prob)
-        """debugging
-        print("after mutate")
-        for individual in population.individuals:
-            print(individual.solution)
-        #print(population.individuals)
-        """
         iteration = iteration + 1
         print("Generation: {}".format(iteration))
         
