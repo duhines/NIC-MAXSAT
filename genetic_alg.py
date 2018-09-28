@@ -293,7 +293,7 @@ def pretty_solution(solution):
 
 
 def print_solution(best_so_far, problem, parameters):
-    print("\n\nFile: {}".format(parameters.file_name))
+    print("File: {}".format(parameters.file_name))
     print("Literals count: {}\nClauses count: {}".format(MAXSAT_PROBLEM["num_literals"], MAXSAT_PROBLEM["num_clauses"]))
     percentage_correct = round((best_so_far.individual.fitness / MAXSAT_PROBLEM["num_clauses"]) * 100, 1)
     print("Best individual scored {} ({}%)".format(best_so_far.individual.fitness, percentage_correct))
@@ -306,32 +306,48 @@ def standard_GA(problem, parameters):
     Parameters:
     Return:
     """
+    print(MAXSAT_PROBLEM)
     population = Population(0, parameters.pop_size)
     population.generate_initial_pop(MAXSAT_PROBLEM)
     population.individuals[0].get_fitness(MAXSAT_PROBLEM)
     best_so_far = BestSoFar(population.individuals[0], 0)
+    if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
+        print("Full Solution!")
+        print_solution(best_so_far, problem, parameters)
+        return
     iteration = 0
     while iteration < parameters.num_generations:
-        #print("beginning")
-        #print(population.individuals)
+        print("beginning")
+        for individual in population.individuals:
+            print(individual.solution)
         population.next_generation()
         population.score_individuals()
-        #print("after score")
+        print("after score")
+        for individual in population.individuals:
+            print(individual.solution)
         #print(population.individuals)
         if best_so_far.compare_to_best(population.individuals, iteration):
             if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
+                print("Full Solution!")
                 print_solution(best_so_far, problem, parameters)
+                return
         population.select(parameters.selection_type)
-        #print("after select")
+        print("after select")
+        for individual in population.individuals:
+            print(individual.solution)
         #print(population.individuals)
         population.recombination(parameters.xover_prob, parameters.xover_method)
-        ##print("after recombination")
+        print("after recombination")
+        for individual in population.individuals:
+            print(individual.solution)
         #print(population.individuals)
         population.mutate(parameters.mutation_prob)
-        #print("after mutate")
+        print("after mutate")
+        for individual in population.individuals:
+            print(individual.solution)
         #print(population.individuals)
         iteration = iteration + 1
-        #print("Generation: {}".format(iteration))
+        print("Generation: {}".format(iteration))
         
     print_solution(best_so_far, problem, parameters)
 
@@ -355,8 +371,8 @@ def main():
     }
 
     # Acquire MAXSAT problem
-    #MAXSAT_PROBLEM = sample_problem
-    MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)
+    MAXSAT_PROBLEM = sample_problem
+    #MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)
     solution = standard_GA(problem, parameters)
 
 
