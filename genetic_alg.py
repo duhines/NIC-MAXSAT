@@ -44,6 +44,7 @@ class Population:
     def __init__(self, generation, pop_size):
         self.generation = generation
         self.pop_size = pop_size
+        self.individuals = []
 
     def next_generation(self):
         self.generation = self.generation + 1
@@ -75,7 +76,6 @@ class Population:
         for individual in self.individuals:
             individual.get_fitness(MAXSAT_PROBLEM)
             best_so_far.compare_to_best(individual, self.generation)
-            
 
     def select(self, selection_method):
         """
@@ -239,6 +239,7 @@ class Population:
 class Individual:
     def __init__(self, bools_array):
         self.solution = bools_array
+        self.fitness = 0
 
     def get_fitness(self, problem):
         """
@@ -309,7 +310,7 @@ def standard_GA(problem, parameters):
     Return:
     """
     population = Population(0, parameters.pop_size)
-    population.generate_initial_pop(MAXSAT_PROBLEM["num_literals"])
+    population.generate_initial_pop(MAXSAT_PROBLEM["num_literals"]) # Why pass problem as a parameter if you're going to reference it as a global?
     population.individuals[0].get_fitness(MAXSAT_PROBLEM)
     #arbitrarily initialize best_so_far
     best_so_far = BestSoFar(population.individuals[0], 0)
