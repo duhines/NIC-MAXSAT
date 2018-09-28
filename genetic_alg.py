@@ -260,6 +260,7 @@ class Individual:
         self.fitness = fitness
         return fitness
 
+
 class BestSoFar:
     def __init__(self, individual, iteration):
         self.individual = individual
@@ -298,6 +299,7 @@ def print_solution(best_so_far, problem, parameters):
     print("Best individual scored {} ({}%)".format(best_so_far.individual.fitness, percentage_correct))
     print("Solution:\n{}".format(pretty_solution(best_so_far.individual.solution)))
     print("Found in iteraion {}".format(best_so_far.iteration_found))
+
 
 def standard_GA(problem, parameters):
     """
