@@ -40,9 +40,9 @@ class PopulationVector:
         for individual in scored_pop[0:ind_to_incl]:
             for i in range(self.num_lits):
                 if individual[i]:
-                    self.vector[i] = self.vector[i](1 - alpha) + alpha
+                    self.vector[i] = self.vector[i]*(1.0 - alpha) + alpha
                 else:
-                    self.vector[i] = self.vector[i](1 - alpha)
+                    self.vector[i] = self.vector[i]*(1.0 - alpha)
 
     # Mutate pop vector. Mu := P(mutation). Shift := degree of mutation
     def mutate_vector(self, mu, shift):
@@ -63,7 +63,7 @@ def score_pop(population, problem):
 
 
 def fitness(individual, problem):
-    fitness = 0
+    fit = 0
     for clause in problem["clauses"]:
         check = False
         for literal in clause:
@@ -72,8 +72,8 @@ def fitness(individual, problem):
             else:
                 check = check or not individual[abs(literal) - 1]
         if check:
-            fitness += 1
-    return fitness
+            fit += 1
+    return fit
 
 
 def pbil(problem, parameters):
