@@ -1,26 +1,46 @@
 """
-1. Get the parser going.
-    i. read cnf FILE->determine number of literals for the size of the individuals representation
-    ii. put the FILE in an array, where each item in array is one clause from the FILE (one line)
-        a. clause ex:  ..., 8, 3, -4,... (negative values indicate that the literal is negated)
-    iii. save the boolean values as strings
+Team: 3D^3
+Authors: Dustin Hines, David Anderson, Duncan Gans
+Course: Nature-Inspired Computation
+Assignment: Evolutionary Algorithms for MAXSAT: A Comparison of Genetic Algorithms 
+    and Population Based Incremental Learning
+Date: 1 October 2018
+Description:
+    This file implements a genetic algorithm for solving MAXSAT problems.  Our 
+    implementation includes:
+        3 selection methods:
+            - rank select
+            - tournament select
+            - Boltzmann section
+        And 2 crossover methods:
+            - single point crossover
+            - uniform crossover 
+    
+    The genetic algorithm first creates a population of individuals with random 
+    solutions to the MAXSAT problem.  Then, it iteratively selects individuals
+    and recombines them with crossover with a certain probability.  After 
+    recombination, each individual is mutated based on a another probability.
+    The individuals in the population at this stage then progress to the next
+    iteration of the algorithm, repeating this process.  After the algorithm 
+    has gone through iterations equal to the specified number of generations,
+    the best solution found is printed along with the generation it was found
+    in, the percentage of the clauses it satified, the name of the MAXSAT
+    problem file, the solution of literal values, and the number of variables
+    and clauses in the problem.
 
+Notes:
+    - To run:
+        python3 genetic_alg.py <file name> <population size> <selection method>
+        <crossover method> <crossover probability> <mutation probability>
+        <number of generations> <use GA/PBIL>
+    - Our file assumes that the MAXSAT file name specified is in a problems
+    - To import the MAXSAT problems, the parse_input module is imported.
+    -   
+"""
 
-Command Line arguments:
-    python3 genetic_alg.py <file name> <population size> <selection method> <crossover method>
-        <crossover probability> <mutation probability> <number of generations> <use GA/PBIL>
-
-"""
-"""
-    STYLE: 
-        - 80 chars max per line
-        - lets use underscores instead of camel case
-        - function docstrings inside functions
-        - module docstring at top of each FILE with 
-            - authors, purpose, bugs, etc.
-"""
 
 import parse_input as parse
+import pbil as PBIL
 import sys
 import random
 import math
@@ -31,7 +51,11 @@ MAXSAT_PROBLEM = []
 
 
 class Parameters:
-    def __init__(self, file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm):
+    """
+    Class used to store the command line arguments conviniently.
+    """
+    def __init__(self, file_name, pop_size, selection_type, xover_method,
+        xover_prob, mutation_prob, num_generations, algorithm):
         self.file_name = file_name
         self.pop_size = int(pop_size)
         self.selection_type = selection_type 
@@ -43,24 +67,37 @@ class Parameters:
 
 
 class Population:
+    """
+    Population for the GA.  Includes the following methods:
+        - next_generation: 
+        - generate_initial_pop
+        - score_individuals
+        - select
+        - rank_select
+        - tournament_select
+        - boltzmann_select
+        - recombination
+        - single_crossover
+        - uniform_crossover
+        - mutate
+    """
     def __init__(self, generation, pop_size):
         self.generation = generation
         self.pop_size = pop_size
         self.individuals = []
 
     def next_generation(self):
+        """
+        Purpose: increment the generation count by 1
+        """
         self.generation = self.generation + 1
 
     def generate_initial_pop(self, num_literals):
         """
-        Purpose: Generate an initial population to start the genetic algorithm with.
-        Input:
-            problem: Dictionary including the following information: number of
-                literals, number of clauses, and the clauses.
-            population_size: integer indicating the number of individuals that
-                are needed for the initial generation.
-        Return: A list of the individuals in the population where each individual
-            is a list of randomly assigned Boolean values.
+        Purpose: Generate an initial population to start the genetic algorithm
+            and set self.individuals to this population.
+        Input: number of literals
+        Return: none
         """
         population = []
         solution = []
@@ -75,7 +112,13 @@ class Population:
         self.individuals = population
 
     def score_individuals(self, best_so_far):
-        
+        """
+        Purpose: For each of the individuals in the population, if necessary,
+            calculate their fitness and compare to the best individual so far
+            to update that variable if a better solution is found/
+        Input: best_so_far class
+        Return: none
+        """
         for individual in self.individuals:
             if individual.fitness == -1:
                 individual.get_fitness(MAXSAT_PROBLEM)
@@ -87,7 +130,8 @@ class Population:
         Purpose: Wrapper method for the selection methods.  Used to call the correct
             selection method based on the command line argument specifying the selection
             method.
-        Parameters:
+        Parameters: selection method to use
+        Return: none
         """
         if selection_method == "rs":
             self.rank_select()
@@ -98,16 +142,16 @@ class Population:
 
     def recombination(self, xover_prob, xover_type):
         """
-        Purpose: From the selected individuals, crossover by chance xover_prob to create
-            next generation.
-        Parameters: The selected individuals from the current generation, the probability
-            of performing crossover, and the crossover type.
-        Return: The next generation of individuals!
+        Purpose: for individual in the population, crossover by chance
+            xover_prob to create next generation.
+        Parameters: the probability of performing crossover, and the crossover type.
+        Return: none
         """
         next_gen = []
         for i in range(0, len(self.individuals)//2):
             first = self.individuals[i]
             second = self.individuals[i+len(self.individuals)//2]
+            #recombine with xover_prob
             if random.random() < xover_prob:
                 if xover_type == "1c":
                     offspring = self.single_crossover(first, second)
@@ -118,19 +162,20 @@ class Population:
             else:
                 next_gen.append(first)
                 next_gen.append(second)
+        #clear individuals first
         del self.individuals[:]
         self.individuals = next_gen.copy()
 
     def mutate(self, mutation_prob):
         """
-        Purpose: Mutate the population!
-        Parameters: Population represented as a list of individuals where
-            each individual is a list of booleans and a probability for
-            mutation.
-        Return: The population, but mutated!
+        Purpose: Mutate the individuals population by flipping a coin to decide
+            whether to switch the value of each literal in the solution.
+        Parameters: probability for mutation
+        Return: none
         """
         for individual in self.individuals:
             for literal in individual.solution:
+                #coin flip chance 
                 if random.random() < mutation_prob:
                     literal = not literal
                     individual.fitness = -1
@@ -142,13 +187,13 @@ class Population:
             fitness and then assigned a rank (1st best, 2nd best, etc.).  Individuals are
             then choosen randomly proportional to their rank such that higher ranked
             individuals are more likely to be chosen.
-        Input: The current generation as a list of tuples where the first element of the
-            tuple is the individual and the second element of the tuple is the individual's
-            score.
-        Return: List of individuals that were selected by ranked selection.
+        Input: none needed since this is a method for population
+        Return: none
         """
-        # via: https://stackoverflow.com/questions/3121979/how-to-sort-list-tuple-of-lists-tuples
-        sorted_generation = sorted(self.individuals, key=lambda individual: individual.fitness)
+        # via:https://stackoverflow.com/questions/3121979/
+        #    how-to-sort-list-tuple-of-lists-tuples
+        sorted_generation = sorted(self.individuals, 
+            key=lambda individual:individual.fitness)
         total_rank = 0
         for i in range(1, len(sorted_generation) + 1):
             total_rank += i
@@ -158,6 +203,8 @@ class Population:
             base = 0
             increment = 1
             rand_value = random.randint(0, total_rank - 1)
+            #this is essentially implementing a roulette table
+            #not sure how else to explain this 
             while rand_value > base:
                 increment += 1
                 base += increment
@@ -172,10 +219,8 @@ class Population:
         Purpose: Use tournament selection to determine which individuals progress
             to the recombination phase.  Tournament selection will repeatedly choose
             pairs from the population and then take the fitter of the two is selected.
-        Input: The current generation as a list of tuples where the first element of the
-            tuple is the individual and the second element of the tuple is the individual's
-            score.
-        Return: List of individuals that were selected by tournament selection.
+        Input: none 
+        Return: none
         """
         selected_individuals = []
         for i in range (0, len(self.individuals)):
@@ -183,7 +228,7 @@ class Population:
             rand_index2 = random.randint(0, len(self.individuals) - 1)
             individual1 = self.individuals[rand_index1]
             individual2 = self.individuals[rand_index2]
-            #compare individual fitnesses
+            #compare individual fitnesses, choose best
             if individual1.fitness > individual2.fitness:
                 selected_individuals.append(individual1)
             else:
@@ -194,19 +239,24 @@ class Population:
 
     def boltzmann_select(self):
         """
-        Purpose: Use Boltzmann selection to determine which individuals progress to the reconbination phase. 
-        Boltzmann select will give all of the individuals a score of e (euler's constant) to the power of 
-        the individuals fitness. This score, divided by the sum of all scores, is the probability an individual
-        will be chosen. 
+        Purpose: Use Boltzmann selection to determine which individuals progress
+            to the reconbination phase. Boltzmann select will give all of the 
+            individuals a score of e (euler's constant) to the power of the 
+            individuals fitness. This score, divided by the sum of all scores, 
+            is the probability an individual will be chosen. 
+        Input: none 
+        Return: none
         """
         selected_individuals = []
         scored_individuals = []
         sum_score = 0
         for i in range (0, len(self.individuals)):
-            #use percentage correct as measure of fitness here
-            individ_score = (pow(math.e, self.individuals[i].fitness / MAXSAT_PROBLEM["num_clauses"] * 100))
+            #NOTE: use percentage correct as measure of fitness here to get around overflow
+            perc_fit = self.individuals[i].fitness / MAXSAT_PROBLEM["num_clauses"] * 100
+            individ_score = (pow(math.e, perc_fit))
             sum_score += individ_score
             scored_individuals.append((individ_score, i))
+        #sort by e^fitness
         scored_individuals = sorted(scored_individuals, key=lambda tup: tup[0])
         for i in range(0, len(self.individuals)):
             bucket_score = 0
@@ -224,13 +274,19 @@ class Population:
     def single_crossover(self, individual1, individual2): 
         """
         Purpose: From two individuals, use a single crossover point to produce two children.
-        Parameters: Two individuals, each representing a MAXSAT solution as a list of Boolean
-            values.
+        Parameters: Two individual classes, each with a MAXSAT solution as a list of Boolean
+            values as the solution instance variable.
         Return: A tuple of the two two children produced by the single point crossover.  
         """
         crossover_point = random.randint(1, len(individual1.solution) - 1)
-        first_child_solution = individual1.solution[:crossover_point].copy() + individual2.solution[crossover_point:].copy()
-        second_child_solution = individual2.solution[:crossover_point].copy() + individual1.solution[crossover_point:].copy()
+        #first child
+        first_part1 = individual1.solution[:crossover_point].copy()
+        first_part2 = individual2.solution[crossover_point:].copy()
+        first_child_solution =  first_part1 + first_part2
+        #second child
+        second_part1 = individual2.solution[:crossover_point].copy()
+        second_part2 = individual1.solution[crossover_point:].copy()
+        second_child_solution =  second_part1 + second_part2
         first_child = Individual(first_child_solution)
         second_child = Individual(second_child_solution)
 
@@ -245,7 +301,7 @@ class Population:
         Parameters: The two individuals that are making children
         Return: A tuple of the first and second children of individual1/2
             Note:
-                - everyone has two children
+                - everyone has two children to maintain population size
                 - the first child is the best of the bunch
         """
         breeding_pair = (individual1, individual2)
@@ -269,6 +325,10 @@ class Population:
 
 
 class Individual:
+    """
+    Purpose: individual class that includes a get_fitness method to calculate
+        the fitness of an individual.
+    """
     def __init__(self, bools_array):
         self.solution = bools_array
         self.fitness = -1
@@ -297,22 +357,41 @@ class Individual:
 
 
 class BestSoFar:
+    """
+    Purpose: keep track of the best solution so far and to provide a method to
+        compare the best so far to an individual.
+    """
     def __init__(self, individual, iteration):
         self.individual = individual
         self.iteration_found = iteration
 
     def compare_to_best(self, individual, iteration):
+        """
+        Purpose: Update the best solution so far if the given individual
+            has a better solution.
+        Input: individual to check against best so far, iteration this individual
+            is from.
+        Return:  Boolean indicating whether the given individual was better than the 
+            best solution so far.
+        """
         if individual.fitness > self.individual.fitness:
             self.individual.solution = individual.solution.copy()
             self.individual.fitness = individual.fitness
             self.iteration_found = iteration
-            #print("Found new best with score {} in generation {}".format(self.individual.fitness, self.iteration_found))
+            print("Found new best with score {} in generation {}".format(
+                self.individual.fitness, self.iteration_found))
             return True
 
         return False
 
 
 def pretty_solution(solution):
+    """
+    Purpose: Modify the solution to that it is represented as a mostly legible
+        string.
+    Input: Solution as a list of boolean values.
+    Return: Solution represented as a string
+    """
     pretty = ""
     ith_literal = 1
     ten_per_line = 0
@@ -327,10 +406,22 @@ def pretty_solution(solution):
 
 
 def print_solution(best_so_far, parameters):
+    """
+    Purpose: Print output to the speficications of the project writeup.
+    Input: object representing the best solution, object representing the 
+        problem parameters
+    Return: none
+    """
     print("File: {}".format(parameters.file_name))
-    print("Literals count: {}\nClauses count: {}".format(MAXSAT_PROBLEM["num_literals"], MAXSAT_PROBLEM["num_clauses"]))
-    percentage_correct = round((best_so_far.individual.fitness / MAXSAT_PROBLEM["num_clauses"]) * 100, 1)
-    print("Best individual scored {} ({}%)".format(best_so_far.individual.fitness, percentage_correct))
+    num_literals = MAXSAT_PROBLEM["num_literals"]
+    num_clauses = MAXSAT_PROBLEM["num_clauses"]
+    print("Literals count: {}\nClauses count: {}".format(num_literals, num_clauses))
+    fitness_div_clauses = best_so_far.individual.fitness / MAXSAT_PROBLEM["num_clauses"]
+    percentage_correct = round(fitness_div_clauses * 100, 1)
+    print("Best individual scored {} ({}%)".format(best_so_far.individual.fitness,
+        percentage_correct))
+    print("Difference: {}".format(MAXSAT_PROBLEM["num_clauses"] -
+        best_so_far.individual.fitness))
     print("Solution:\n{}".format(pretty_solution(best_so_far.individual.solution)))
     print("Found in iteration {}".format(best_so_far.iteration_found))
 
@@ -338,41 +429,29 @@ def print_solution(best_so_far, parameters):
 
 def standard_GA(parameters):
     """
-    Purpose:
-    Parameters:
-    Return:
+    Purpose: Outmost function for the GA.  For iterations equal to the specified
+        number of generations, score, select, recombine, and mutate the population
+        to work towards the solution to a MAXSAT problem
+    Parameters: parameters object including each of the command line arguments
+        (these are detailed in the module docstring)
+    Return: best solution found (for testing purposes)
     """
-
     population = Population(0, parameters.pop_size)
     population.generate_initial_pop(MAXSAT_PROBLEM["num_literals"])
-
-    """debugging
-    This is the solution to maxcut-140-630-0.7-5.cnf via the website 
-    """
-    """
-    best_solution = "-1 2 3 4 5 6 -7 8 9 -10 -11 -12 -13 14 -15 16 17 -18 -19 -20 21 22 -23 24 -25 -26 -27 28 29 -30 -31 -32 -33 -34 35 -36 37 -38 -39 -40 -41 -42 43 -44 45 -46 47 48 49 50 -51 52 -53 -54 55 56 57 58 59 -60 61 -62 63 64 65 -66 -67 68 69 70 -71 72 -73 74 -75 76 -77 -78 79 80 -81 -82 -83 84 85 86 -87 -88 89 90 -91 -92 93 -94 -95 96 97 -98 99 100 101 102 103 104 105 -106 -107 -108 -109 -110 -111 112 113 -114 -115 -116 -117 118 -119 -120 121 122 123 124 125 126 127 128 -129 -130 131 -132 133 -134 -135 -136 -137 -138 -139 -140"
-    best_solution = best_solution.split()
-    print(best_solution)
-    solution_test = []
-    for literal in best_solution:
-        solution_test.append(int(literal) > 0)
-    print(solution_test)
-    population.individuals[0].solution = solution_test
-    """
-    """ending debugging"""
-
-    #print(population.individuals[0].get_fitness(MAXSAT_PROBLEM))
+    population.individuals[0].get_fitness(MAXSAT_PROBLEM)
     
     #arbitrarily initialize best_so_far
     best_so_far = BestSoFar(population.individuals[0], 0)
+    print(best_so_far.individual.get_fitness(MAXSAT_PROBLEM))
     if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
         print("Full Solution!")
         print_solution(best_so_far, problem, parameters)
         return
 
-    iteration = 0
+    iteration = 1
     print(parameters.num_generations)
-    while iteration < parameters.num_generations:
+    while iteration <= parameters.num_generations:
+        print("Generation: {}".format(iteration))
         population.next_generation()
         population.score_individuals(best_so_far)
         #check if we have found a solution
@@ -383,17 +462,27 @@ def standard_GA(parameters):
         population.select(parameters.selection_type)        
         population.recombination(parameters.xover_prob, parameters.xover_method)      
         population.mutate(parameters.mutation_prob)
-        
         iteration = iteration + 1
-        #print("Generation: {}".format(iteration))
+        best = 0
+        average = 0
+        population.score_individuals(best_so_far)
+        for individual in population.individuals:
+            if individual.fitness > best:
+                best = individual.fitness
+            average += individual.fitness
+       
     population.score_individuals(best_so_far)
-    #print_solution(best_so_far, parameters)
+    print_solution(best_so_far, parameters)
     return best_so_far
 
 def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm):
+    """
+    Used to test in conjuntion with the test module.
+    """
     global MAXSAT_PROBLEM
     MAXSAT_PROBLEM = parse.return_problem("test_problems/" + file_name)
-    parameters = Parameters(file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm)
+    parameters = Parameters(file_name, pop_size, selection_type, xover_method, 
+        xover_prob, mutation_prob, num_generations, algorithm)
     start = time.time()
     solution = standard_GA(parameters)
     finished = time.time()
@@ -406,28 +495,19 @@ def main():
     # acquire command line arguments
     print("running main like a normal person")
     global MAXSAT_PROBLEM
-    parameters = Parameters(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],sys.argv[8])            
+    parameters = Parameters(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],
+        sys.argv[5],sys.argv[6],sys.argv[7],sys.argv[8])            
 
+    #round the population size to that things work nicely
     if parameters.pop_size % 2 != 0:
         parameters.pop_size += 1
     
-    """
-    **For testing purposes only**
-    """
-    problem = [[1, -4], [-2, -3], [4, 1], [-4, 4], [-3, 1], [-1, 2], [1, 1], [-2, -2]]
-    sample_problem = {
-        "num_literals": 4,
-        "num_clauses": 8,
-        "clauses": problem
-    }
-
     # Acquire MAXSAT problem
-
-    #testing
-    #MAXSAT_PROBLEM = sample_problem
-    
     MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)
-    solution = standard_GA(parameters)
+    if parameters.algorithm == 'ga':
+        standard_GA(parameters)
+    else:
+        PBIL.pbil(MAXSAT_PROBLEM, parameters)
 
 
-#main()
+main()
