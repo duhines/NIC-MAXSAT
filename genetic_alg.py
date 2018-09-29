@@ -45,7 +45,7 @@ class Population:
         self.generation = generation
         self.pop_size = pop_size
         self.individuals = []
-        
+
     def next_generation(self):
         self.generation = self.generation + 1
 
@@ -74,8 +74,9 @@ class Population:
 
     def score_individuals(self, best_so_far):
         for individual in self.individuals:
-            individual.get_fitness(MAXSAT_PROBLEM)
-            best_so_far.compare_to_best(individual, self.generation)
+            if individual.fitness == -1:
+                individual.get_fitness(MAXSAT_PROBLEM)
+                best_so_far.compare_to_best(individual, self.generation)
             
 
     def select(self, selection_method):
@@ -129,6 +130,7 @@ class Population:
             for literal in individual.solution:
                 if random.random() < mutation_prob:
                     literal = not literal
+                    individual.fitness = -1
 
     def rank_select(self):
         """
@@ -197,13 +199,12 @@ class Population:
             values.
         Return: A tuple of the two two children produced by the single point crossover.  
         """
-        crossover_point = random.randint(1, len(individual1.solution) - 2)
+        crossover_point = random.randint(1, len(individual1.solution) - 1)
         first_child_solution = individual1.solution[:crossover_point].copy() + individual2.solution[crossover_point:].copy()
         second_child_solution = individual2.solution[:crossover_point].copy() + individual1.solution[crossover_point:].copy()
         first_child = Individual(first_child_solution)
         second_child = Individual(second_child_solution)
-        first_child.get_fitness(MAXSAT_PROBLEM)
-        second_child.get_fitness(MAXSAT_PROBLEM)
+
         return (first_child, second_child)
 
 
@@ -222,7 +223,7 @@ class Population:
         first_child = []
         worse_child = [] #@dgans, @djanderson
 
-        for index in range(0, len(breeding_pair.solution)):
+        for index in range(0, len(breeding_pair[0].solution)):
             flip_for_first = random.random()
             flip_for_second = random.random()
             if flip_for_first < .5:
@@ -233,13 +234,15 @@ class Population:
                 worse_child.append(breeding_pair[0].solution[index])
             else:
                 worse_child.append(breeding_pair[1].solution[index])
-
-        return (first_child, worse_child)
+        individual_first = Individual(first_child)
+        individual_second = Individual(worse_child)
+        return (individual_first, individual_second)
 
 
 class Individual:
     def __init__(self, bools_array):
         self.solution = bools_array
+        self.fitness = -1
 
     def get_fitness(self, problem):
         """
@@ -309,9 +312,26 @@ def standard_GA(problem, parameters):
     Parameters:
     Return:
     """
+
     population = Population(0, parameters.pop_size)
     population.generate_initial_pop(MAXSAT_PROBLEM["num_literals"])
-    population.individuals[0].get_fitness(MAXSAT_PROBLEM)
+
+    """debugging
+    This is the solution to maxcut-140-630-0.7-5.cnf via the website 
+    """
+    """
+    best_solution = "1 -2 -3 -4 -5 -6 7 -8 9 -10 -11 -12 -13 -14 -15 16 -17 18 19 -20 -21 22 -23 24 25 26 -27 28 -29 30 31 32 33 34 35 -36 -37 38 -39 -40 -41 42 43 -44 -45 -46 47 -48 49 50 -51 -52 53 54 55 -56 -57 -58 59 -60 61 -62 63 -64 -65 -66 67 68 -69 70 71 72 -73 -74 -75 -76 77 -78 79 -80 -81 82 83 -84 85 86 87 88 89 -90 -91 -92 93 -94 -95 96 97 98 99 100 101 102 103 -104 105 106 -107 -108 -109 -110 -111 -112 113 114 115 -116 117 -118 -119 -120 121 -122 123 124 125 126 127 128 129 -130 131 -132 -133 134 -135 -136 137 -138 139 140"
+    best_solution = best_solution.split()
+    print(best_solution)
+    solution_test = []
+    for literal in best_solution:
+        solution_test.append(int(literal) > 0)
+    print(solution_test)
+    population.individuals[0].solution = solution_test
+    """
+    """ending debugging"""
+
+    print(population.individuals[0].get_fitness(MAXSAT_PROBLEM))
     #arbitrarily initialize best_so_far
     best_so_far = BestSoFar(population.individuals[0], 0)
     if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
@@ -337,6 +357,10 @@ def standard_GA(problem, parameters):
     print_solution(best_so_far, problem, parameters)
 
 
+def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm):
+    return
+
+
 def main():
     # acquire command line arguments
     global MAXSAT_PROBLEM
@@ -348,7 +372,7 @@ def main():
     """
     **For testing purposes only**
     """
-    problem = [[1, -4], [-2, -3], [4, 1], [-4, 4], [-3, 1], [-1, 2], [1, 1], [-1, 1]]
+    problem = [[1, -4], [-2, -3], [4, 1], [-4, 4], [-3, 1], [-1, 2], [1, 1], [-2, -2]]
     sample_problem = {
         "num_literals": 4,
         "num_clauses": 8,
@@ -356,8 +380,12 @@ def main():
     }
 
     # Acquire MAXSAT problem
+
+    #testing
     #MAXSAT_PROBLEM = sample_problem
+    
     MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)
+    print(MAXSAT_PROBLEM["clauses"])
     solution = standard_GA(problem, parameters)
 
 
