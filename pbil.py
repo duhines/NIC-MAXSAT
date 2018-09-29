@@ -79,10 +79,9 @@ def fitness(individual, problem):
 def pbil(problem, parameters):
     pop_vector = PopulationVector(problem["num_literals"])
 
+    # The following is the actual PBIL algorithm:
     iteration = 0
     while iteration < parameters.num_generations:
-
-        # The following is the actual PBIL algorithm:
         nthPop = pop_vector.generate_population(parameters.pop_size)
         nthPop = score_pop(nthPop, problem)
         # Update pop vector using CSL approach described in paper:
@@ -92,3 +91,6 @@ def pbil(problem, parameters):
         pop_vector.mutate_vector(parameters.mutation_prob,
                                  parameters.mu_shift)
 
+    # Final population vector (hopefully) will approximate correct solution
+    final_pop = [round(x for x in pop_vector)]
+    return(final_pop, pop_vector)
