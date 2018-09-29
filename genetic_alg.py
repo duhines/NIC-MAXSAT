@@ -23,6 +23,8 @@ Command Line arguments:
 import parse_input as parse
 import sys
 import random
+import math
+import time
 
 FILE = "problems/"
 MAXSAT_PROBLEM = []
@@ -73,11 +75,12 @@ class Population:
         self.individuals = population
 
     def score_individuals(self, best_so_far):
+        
         for individual in self.individuals:
             if individual.fitness == -1:
                 individual.get_fitness(MAXSAT_PROBLEM)
                 best_so_far.compare_to_best(individual, self.generation)
-            
+
 
     def select(self, selection_method):
         """
@@ -103,8 +106,8 @@ class Population:
         """
         next_gen = []
         for i in range(0, len(self.individuals)//2):
-            first = self.individuals[random.randint(0, len(self.individuals) - 1)]
-            second = self.individuals[random.randint(0, len(self.individuals) - 1)]
+            first = self.individuals[i]
+            second = self.individuals[i+len(self.individuals)//2]
             if random.random() < xover_prob:
                 if xover_type == "1c":
                     offspring = self.single_crossover(first, second)
@@ -190,7 +193,33 @@ class Population:
         self.individuals = selected_individuals
 
     def boltzmann_select(self):
-        return
+        """
+        Purpose: Use Boltzmann selection to determine which individuals progress to the reconbination phase. 
+        Boltzmann select will give all of the individuals a score of e (euler's constant) to the power of 
+        the individuals fitness. This score, divided by the sum of all scores, is the probability an individual
+        will be chosen. 
+        """
+        selected_individuals = []
+        scored_individuals = []
+        sum_score = 0
+        for i in range (0, len(self.individuals)):
+            #use percentage correct as measure of fitness here
+            individ_score = (pow(math.e, self.individuals[i].fitness / MAXSAT_PROBLEM["num_clauses"] * 100))
+            sum_score += individ_score
+            scored_individuals.append((individ_score, i))
+        scored_individuals = sorted(scored_individuals, key=lambda tup: tup[0])
+        for i in range(0, len(self.individuals)):
+            bucket_score = 0
+            rand_num = random.uniform(0.0, sum_score)
+            i = 0
+            while bucket_score <= rand_num:
+                individ = scored_individuals[i]
+                bucket_score += individ[0]
+                if rand_num < bucket_score:
+                    selected_individuals.append(self.individuals[individ[1]])
+                i += 1
+        del self.individuals[:]
+        self.individuals = selected_individuals
 
     def single_crossover(self, individual1, individual2): 
         """
@@ -277,7 +306,7 @@ class BestSoFar:
             self.individual.solution = individual.solution.copy()
             self.individual.fitness = individual.fitness
             self.iteration_found = iteration
-            print("Found new best with score {} in generation {}".format(self.individual.fitness, self.iteration_found))
+            #print("Found new best with score {} in generation {}".format(self.individual.fitness, self.iteration_found))
             return True
 
         return False
@@ -297,16 +326,17 @@ def pretty_solution(solution):
     return pretty
 
 
-def print_solution(best_so_far, problem, parameters):
+def print_solution(best_so_far, parameters):
     print("File: {}".format(parameters.file_name))
     print("Literals count: {}\nClauses count: {}".format(MAXSAT_PROBLEM["num_literals"], MAXSAT_PROBLEM["num_clauses"]))
     percentage_correct = round((best_so_far.individual.fitness / MAXSAT_PROBLEM["num_clauses"]) * 100, 1)
     print("Best individual scored {} ({}%)".format(best_so_far.individual.fitness, percentage_correct))
     print("Solution:\n{}".format(pretty_solution(best_so_far.individual.solution)))
-    print("Found in iteraion {}".format(best_so_far.iteration_found))
+    print("Found in iteration {}".format(best_so_far.iteration_found))
 
 
-def standard_GA(problem, parameters):
+
+def standard_GA(parameters):
     """
     Purpose:
     Parameters:
@@ -320,7 +350,7 @@ def standard_GA(problem, parameters):
     This is the solution to maxcut-140-630-0.7-5.cnf via the website 
     """
     """
-    best_solution = "1 -2 -3 -4 -5 -6 7 -8 9 -10 -11 -12 -13 -14 -15 16 -17 18 19 -20 -21 22 -23 24 25 26 -27 28 -29 30 31 32 33 34 35 -36 -37 38 -39 -40 -41 42 43 -44 -45 -46 47 -48 49 50 -51 -52 53 54 55 -56 -57 -58 59 -60 61 -62 63 -64 -65 -66 67 68 -69 70 71 72 -73 -74 -75 -76 77 -78 79 -80 -81 82 83 -84 85 86 87 88 89 -90 -91 -92 93 -94 -95 96 97 98 99 100 101 102 103 -104 105 106 -107 -108 -109 -110 -111 -112 113 114 115 -116 117 -118 -119 -120 121 -122 123 124 125 126 127 128 129 -130 131 -132 -133 134 -135 -136 137 -138 139 140"
+    best_solution = "-1 2 3 4 5 6 -7 8 9 -10 -11 -12 -13 14 -15 16 17 -18 -19 -20 21 22 -23 24 -25 -26 -27 28 29 -30 -31 -32 -33 -34 35 -36 37 -38 -39 -40 -41 -42 43 -44 45 -46 47 48 49 50 -51 52 -53 -54 55 56 57 58 59 -60 61 -62 63 64 65 -66 -67 68 69 70 -71 72 -73 74 -75 76 -77 -78 79 80 -81 -82 -83 84 85 86 -87 -88 89 90 -91 -92 93 -94 -95 96 97 -98 99 100 101 102 103 104 105 -106 -107 -108 -109 -110 -111 112 113 -114 -115 -116 -117 118 -119 -120 121 122 123 124 125 126 127 128 -129 -130 131 -132 133 -134 -135 -136 -137 -138 -139 -140"
     best_solution = best_solution.split()
     print(best_solution)
     solution_test = []
@@ -331,7 +361,8 @@ def standard_GA(problem, parameters):
     """
     """ending debugging"""
 
-    print(population.individuals[0].get_fitness(MAXSAT_PROBLEM))
+    #print(population.individuals[0].get_fitness(MAXSAT_PROBLEM))
+    
     #arbitrarily initialize best_so_far
     best_so_far = BestSoFar(population.individuals[0], 0)
     if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
@@ -340,29 +371,40 @@ def standard_GA(problem, parameters):
         return
 
     iteration = 0
+    print(parameters.num_generations)
     while iteration < parameters.num_generations:
         population.next_generation()
         population.score_individuals(best_so_far)
         #check if we have found a solution
         if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
-                print("Full Solution!")
-                print_solution(best_so_far, problem, parameters)
-                return
-        population.select(parameters.selection_type)
-        population.recombination(parameters.xover_prob, parameters.xover_method)
+            print("Full Solution!")
+            print_solution(best_so_far, problem, parameters)
+            return
+        population.select(parameters.selection_type)        
+        population.recombination(parameters.xover_prob, parameters.xover_method)      
         population.mutate(parameters.mutation_prob)
-        iteration = iteration + 1
-        print("Generation: {}".format(iteration))
         
-    print_solution(best_so_far, problem, parameters)
-
+        iteration = iteration + 1
+        #print("Generation: {}".format(iteration))
+    population.score_individuals(best_so_far)
+    #print_solution(best_so_far, parameters)
+    return best_so_far
 
 def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm):
-    return
+    global MAXSAT_PROBLEM
+    MAXSAT_PROBLEM = parse.return_problem("test_problems/" + file_name)
+    parameters = Parameters(file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm)
+    start = time.time()
+    solution = standard_GA(parameters)
+    finished = time.time()
+    run_time = finished - start
+    #time taken, how good the solution is, generation best solution 
+    return (solution, run_time)
 
 
 def main():
     # acquire command line arguments
+    print("running main like a normal person")
     global MAXSAT_PROBLEM
     parameters = Parameters(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6],sys.argv[7],sys.argv[8])            
 
@@ -385,8 +427,7 @@ def main():
     #MAXSAT_PROBLEM = sample_problem
     
     MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)
-    print(MAXSAT_PROBLEM["clauses"])
-    solution = standard_GA(problem, parameters)
+    solution = standard_GA(parameters)
 
 
-main()
+#main()
