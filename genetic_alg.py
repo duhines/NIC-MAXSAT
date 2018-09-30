@@ -461,18 +461,11 @@ def standard_GA(parameters):
         population.select(parameters.selection_type)        
         population.recombination(parameters.xover_prob, parameters.xover_method)      
         population.mutate(parameters.mutation_prob)
-        iteration = iteration + 1
-        best = 0
-        average = 0
-        population.score_individuals(best_so_far)
-        for individual in population.individuals:
-            if individual.fitness > best:
-                best = individual.fitness
-            average += individual.fitness
        
     population.score_individuals(best_so_far)
     print_solution(best_so_far, parameters)
     return best_so_far
+
 
 def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm):
     """
