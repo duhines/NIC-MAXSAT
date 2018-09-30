@@ -462,6 +462,10 @@ def standard_GA(parameters):
         population.recombination(parameters.xover_prob, parameters.xover_method)      
         population.mutate(parameters.mutation_prob)
         iteration += 1
+<<<<<<< HEAD
+=======
+
+>>>>>>> 1511fa7328e554d8e0f14dd51acdaad9cf53a7e4
     population.score_individuals(best_so_far)
     print_solution(best_so_far, parameters)
     return best_so_far
