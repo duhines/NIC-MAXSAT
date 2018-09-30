@@ -45,7 +45,7 @@ class PopulationVector:
     def update_vector(self, scored_pop, ind_to_incl, alpha):
         for individual in scored_pop[0:ind_to_incl]:
             for i in range(self.num_lits):
-                if individual[i]:
+                if individual[0][i]:
                     self.vector[i] = self.vector[i]*(1 - alpha) + alpha
                 else:
                     self.vector[i] = self.vector[i]*(1 - alpha)
@@ -70,7 +70,7 @@ class BestSoFar:
         self.iteration_found = iteration
         self.fitness = 0
 
-    def compare_to_best(self, individual, iteration):
+    def compare_to_best(self, individual, iteration, problem):
         """
         Purpose: Update the best solution so far if the given individual
             has a better solution.
@@ -79,9 +79,10 @@ class BestSoFar:
         Return:  Boolean indicating whether the given individual was better than the
             best solution so far.
         """
-        if individual.fitness > self.individual.fitness:
+        ind_fit = fitness(individual, problem)
+        if ind_fit > self.fitness:
             self.individual = individual.copy()
-            self.fitness = fitness(individual, MAXSAT_PROBLEM)
+            self.fitness = ind_fit
             self.iteration_found = iteration
             print("Found new best with score {} in generation {}".format(
                 self.fitness, self.iteration_found))
@@ -95,7 +96,8 @@ def score_pop(population, problem):
     for individual in population:
         score = fitness(individual, problem)
         scored_generation.append((individual, score))
-    return sorted(scored_generation, reverse=True)
+    # From https://stackoverflow.com/questions/3121979/:
+    return sorted(scored_generation, key=lambda tup: tup[1], reverse=True)
 
 
 def fitness(individual, problem):
@@ -157,12 +159,15 @@ def pbil(problem, parameters):
         nth_pop = pop_vector.generate_population(parameters.pop_size)
         nth_pop = score_pop(nth_pop, problem)
 
+        if iteration == 0:
+            curr_best = BestSoFar(nth_pop, iteration)
+
         # Pull out the best individual and update best_so_far if it's better
-        curr_best.compare_to_best(nth_pop[0], iteration)
+        curr_best.compare_to_best(nth_pop[0][0], iteration, problem)
 
         # Update pop vector using CSL approach described in paper:
         pop_vector.update_vector(nth_pop,
-                                 parameters.ind_to_include,
+                                 parameters.ind_to_incl,
                                  parameters.alpha)
         pop_vector.mutate_vector(parameters.mutation_prob,
                                  parameters.mu_shift)
@@ -171,8 +176,8 @@ def pbil(problem, parameters):
     # Final population vector (hopefully) will approximate correct solution
     # So, we round it out and see if it's better than individuals we've already
     # checked.
-    final_pop = [round(x for x in pop_vector)]
-    curr_best.compare_to_best(final_pop, parameters.num_generations)
+    final_pop = [round(x) for x in pop_vector.vector]
+    curr_best.compare_to_best(final_pop, parameters.num_generations, problem)
 
     # Return a tuple containing both the rounded "final pop vector"
     # and the actual pop_vector. If the algo worked well, these should
