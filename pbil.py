@@ -15,6 +15,7 @@ class Parameters:
         self.num_generations = int(num_generations)
         self.ind_to_incl = int(ind_to_include)
         self.alpha = float(alpha)
+        
 
 
 # A class to look after our population vector:
