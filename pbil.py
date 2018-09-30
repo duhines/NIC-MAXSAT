@@ -1,5 +1,4 @@
 import random
-#from genetic_alg import pretty_solution
 
 FILE = "problems/"
 MAXSAT_PROBLEM = []
@@ -120,8 +119,20 @@ def fitness(individual, problem):
             fit_score += 1
     return fit_score
 
+def prettify(individual):
+    pretty = ""
+    ith_literal = 1
+    ten_per_line = 0
+    for literal in individual:
+        pretty = pretty + "L" + str(ith_literal) + ": " + str(literal) + "  "
+        ith_literal = ith_literal + 1
+        ten_per_line = ten_per_line + 1
+        if ten_per_line > 10:
+            ten_per_line = 0
+            pretty = pretty + "\n"
+    return pretty
 
-def print_PBIL_solution(curr_best, parameters):
+def print_PBIL_solution(curr_best, parameters, problem):
     """
     Purpose: Print output in our nice lil standardized way; see writeup
     :param curr_best: List representing the best solution
@@ -129,16 +140,16 @@ def print_PBIL_solution(curr_best, parameters):
     :return: None, this is a printing function.
     """
     print("File: {}".format(parameters.file_name))
-    num_literals = MAXSAT_PROBLEM["num_literals"]
-    num_clauses = MAXSAT_PROBLEM["num_clauses"]
+    num_literals = problem["num_literals"]
+    num_clauses = problem["num_clauses"]
     print("Literals count: {}\nClauses count: {}".format(num_literals, num_clauses))
-    fitness_div_clauses = curr_best.fitness / MAXSAT_PROBLEM["num_clauses"]
+    fitness_div_clauses = curr_best.fitness / problem["num_clauses"]
     percentage_correct = round(fitness_div_clauses * 100, 1)
     print("Best individual scored {} ({}%)".format(curr_best.fitness,
         percentage_correct))
-    print("Difference: {}".format(MAXSAT_PROBLEM["num_clauses"] -
+    print("Difference: {}".format(problem["num_clauses"] -
         curr_best.fitness))
-    print("Solution:\n{}".format(pretty_solution(curr_best.individual)))
+    print("Solution:\n{}".format(prettify(curr_best.individual)))
     print("Found in iteration {}".format(curr_best.iteration_found))
 
 
@@ -182,7 +193,7 @@ def pbil(problem, parameters):
     # Return a tuple containing both the rounded "final pop vector"
     # and the actual pop_vector. If the algo worked well, these should
     # be extremely close. If they aren't, then probably have to run longer.
-    print_PBIL_solution(curr_best, parameters)
+    print_PBIL_solution(curr_best, parameters, problem)
     return curr_best
 
 
