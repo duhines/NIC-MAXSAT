@@ -173,8 +173,11 @@ class Population:
         Parameters: probability for mutation
         Return: none
         """
+        for index, individual in enumerate(self.individuals):
+            for index2, literal in enumerate(self.individuals[index].solution):
                 #coin flip chance 
                 if random.random() < mutation_prob:
+                    self.individuals[index].solution[index2] = not literal
                     individual.fitness = -1
 
     def rank_select(self):
@@ -458,6 +461,7 @@ def standard_GA(parameters):
         population.select(parameters.selection_type)        
         population.recombination(parameters.xover_prob, parameters.xover_method)      
         population.mutate(parameters.mutation_prob)
+        iteration += 1
     population.score_individuals(best_so_far)
     print_solution(best_so_far, parameters)
     return best_so_far
