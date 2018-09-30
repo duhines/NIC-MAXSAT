@@ -119,6 +119,7 @@ def fitness(individual, problem):
             fit_score += 1
     return fit_score
 
+
 def prettify(individual):
     pretty = ""
     ith_literal = 1
