@@ -371,7 +371,7 @@ class BestSoFar:
             has a better solution.
         Input: individual to check against best so far, iteration this individual
             is from.
-        Return:  Boolean indicating whether the given individual was better than the 
+        Return:  Boolean indicating whether the given individual was better than the
             best solution so far.
         """
         if individual.fitness > self.individual.fitness:
@@ -426,7 +426,6 @@ def print_solution(best_so_far, parameters):
     print("Found in iteration {}".format(best_so_far.iteration_found))
 
 
-
 def standard_GA(parameters):
     """
     Purpose: Outmost function for the GA.  For iterations equal to the specified
@@ -445,7 +444,7 @@ def standard_GA(parameters):
     print(best_so_far.individual.get_fitness(MAXSAT_PROBLEM))
     if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
         print("Full Solution!")
-        print_solution(best_so_far, problem, parameters)
+        print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
         return
 
     iteration = 1
@@ -457,7 +456,7 @@ def standard_GA(parameters):
         #check if we have found a solution
         if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
             print("Full Solution!")
-            print_solution(best_so_far, problem, parameters)
+            print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
             return
         population.select(parameters.selection_type)        
         population.recombination(parameters.xover_prob, parameters.xover_method)      
@@ -495,12 +494,17 @@ def main():
     # acquire command line arguments
     print("running main like a normal person")
     global MAXSAT_PROBLEM
-    parameters = Parameters(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],
-        sys.argv[5],sys.argv[6],sys.argv[7],sys.argv[8])            
-
-    #round the population size to that things work nicely
-    if parameters.pop_size % 2 != 0:
-        parameters.pop_size += 1
+    # Decide how to interpret parameters (based on algo we're using):
+    if sys.argv[8] == 'ga':
+        parameters = Parameters(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],
+            sys.argv[5],sys.argv[6],sys.argv[7],sys.argv[8])
+        # Round the population size to that things work nicely
+        if parameters.pop_size % 2 != 0:
+            parameters.pop_size += 1
+    elif sys.argv[8] == 'pbil':
+        print("Ind to incl = {}".format(sys.argv[3]))
+        parameters = PBIL.PBILParameters(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
+            sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8])
     
     # Acquire MAXSAT problem
     MAXSAT_PROBLEM = parse.return_problem(FILE + parameters.file_name)

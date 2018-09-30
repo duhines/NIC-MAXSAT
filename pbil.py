@@ -1,22 +1,27 @@
-import parse_input as parse
-import sys
 import random
+#from genetic_alg import pretty_solution
+
+FILE = "problems/"
+MAXSAT_PROBLEM = []
 
 
-class Parameters:
+class PBILParameters:
+    """
+    Class used to store PBIL cmd line args conveniently.
+    """
     def __init__(self, file_name, pop_size,
-                 mutation_prob, mutation_shift,
-                 num_generations,
-                 ind_to_include, alpha):
+                 ind_to_include, alpha,
+                 mutation_shift, mutation_prob,
+                 num_generations, algorithm):
         self.file_name = file_name
         self.pop_size = int(pop_size)
-        self.mutation_prob = float(mutation_prob)
-        self.mu_shift = mutation_shift
-        self.num_generations = int(num_generations)
         self.ind_to_incl = int(ind_to_include)
         self.alpha = float(alpha)
+        self.mu_shift = float(mutation_shift)
+        self.mutation_prob = float(mutation_prob)
+        self.num_generations = int(num_generations)
+        self.algorithm = algorithm
         
-
 
 # A class to look after our population vector:
 class PopulationVector:
@@ -41,9 +46,9 @@ class PopulationVector:
         for individual in scored_pop[0:ind_to_incl]:
             for i in range(self.num_lits):
                 if individual[i]:
-                    self.vector[i] = self.vector[i](1 - alpha) + alpha
+                    self.vector[i] = self.vector[i]*(1 - alpha) + alpha
                 else:
-                    self.vector[i] = self.vector[i](1 - alpha)
+                    self.vector[i] = self.vector[i]*(1 - alpha)
 
     # Mutate pop vector. Mu := P(mutation). Shift := degree of mutation
     def mutate_vector(self, mu, shift):
@@ -55,6 +60,36 @@ class PopulationVector:
                     prob -= shift
 
 
+class BestSoFar:
+    """
+    Purpose: keep track of the best solution so far and to provide a method to
+        compare the best so far to an individual.
+    """
+    def __init__(self, individual, iteration):
+        self.individual = individual
+        self.iteration_found = iteration
+        self.fitness = 0
+
+    def compare_to_best(self, individual, iteration):
+        """
+        Purpose: Update the best solution so far if the given individual
+            has a better solution.
+        Input: individual to check against best so far, iteration this individual
+            is from.
+        Return:  Boolean indicating whether the given individual was better than the
+            best solution so far.
+        """
+        if individual.fitness > self.individual.fitness:
+            self.individual = individual.copy()
+            self.fitness = fitness(individual, MAXSAT_PROBLEM)
+            self.iteration_found = iteration
+            print("Found new best with score {} in generation {}".format(
+                self.fitness, self.iteration_found))
+            return True
+
+        return False
+
+
 def score_pop(population, problem):
     scored_generation = []
     for individual in population:
@@ -64,7 +99,14 @@ def score_pop(population, problem):
 
 
 def fitness(individual, problem):
-    fitness = 0
+    """
+    Score the fitness of an indivdual based on a MAXSAT problem.
+    :param individual: An "individual" represented as an array
+    :param problem: MAXSAT problem to compute fitness in ref to, usually
+    stored as global MAXSAT_PROBLEM
+    :return: An int representation of individuals fitness - higher is better
+    """
+    fit_score = 0
     for clause in problem["clauses"]:
         check = False
         for literal in clause:
@@ -73,25 +115,69 @@ def fitness(individual, problem):
             else:
                 check = check or not individual[abs(literal) - 1]
         if check:
-            fitness += 1
-    return fitness
+            fit_score += 1
+    return fit_score
+
+
+def print_PBIL_solution(curr_best, parameters):
+    """
+    Purpose: Print output in our nice lil standardized way; see writeup
+    :param curr_best: List representing the best solution
+    :param parameters: Problem parameters we got earlier
+    :return: None, this is a printing function.
+    """
+    print("File: {}".format(parameters.file_name))
+    num_literals = MAXSAT_PROBLEM["num_literals"]
+    num_clauses = MAXSAT_PROBLEM["num_clauses"]
+    print("Literals count: {}\nClauses count: {}".format(num_literals, num_clauses))
+    fitness_div_clauses = curr_best.fitness / MAXSAT_PROBLEM["num_clauses"]
+    percentage_correct = round(fitness_div_clauses * 100, 1)
+    print("Best individual scored {} ({}%)".format(curr_best.fitness,
+        percentage_correct))
+    print("Difference: {}".format(MAXSAT_PROBLEM["num_clauses"] -
+        curr_best.fitness))
+    print("Solution:\n{}".format(pretty_solution(curr_best.individual)))
+    print("Found in iteration {}".format(curr_best.iteration_found))
+
 
 
 def pbil(problem, parameters):
+    """
+    Purpose: This is a function implementing PBIL optimization of MAXSAT
+    problems
+    :param problem: the MAXSAT problem to optimize, as parsed in parse_input.py
+    :param parameters: Problem parameters. Acquired in main of genetic_alg.py
+    :return: Returns the best individual found
+    """
     pop_vector = PopulationVector(problem["num_literals"])
-
+    curr_best = BestSoFar([], 0)
     # The following is the actual PBIL algorithm:
     iteration = 0
     while iteration < parameters.num_generations:
-        nthPop = pop_vector.generate_population(parameters.pop_size)
-        nthPop = score_pop(nthPop, problem)
+        nth_pop = pop_vector.generate_population(parameters.pop_size)
+        nth_pop = score_pop(nth_pop, problem)
+
+        # Pull out the best individual and update best_so_far if it's better
+        curr_best.compare_to_best(nth_pop[0], iteration)
+
         # Update pop vector using CSL approach described in paper:
-        pop_vector.update_vector(nthPop,
+        pop_vector.update_vector(nth_pop,
                                  parameters.ind_to_include,
                                  parameters.alpha)
         pop_vector.mutate_vector(parameters.mutation_prob,
                                  parameters.mu_shift)
+        iteration += 1
 
     # Final population vector (hopefully) will approximate correct solution
+    # So, we round it out and see if it's better than individuals we've already
+    # checked.
     final_pop = [round(x for x in pop_vector)]
-    return(final_pop, pop_vector)
+    curr_best.compare_to_best(final_pop, parameters.num_generations)
+
+    # Return a tuple containing both the rounded "final pop vector"
+    # and the actual pop_vector. If the algo worked well, these should
+    # be extremely close. If they aren't, then probably have to run longer.
+    print_PBIL_solution(curr_best, parameters)
+    return curr_best
+
+
