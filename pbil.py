@@ -186,7 +186,7 @@ def pbil(problem, parameters):
     # The following is the actual PBIL algorithm:
     iteration = 0
     while iteration < parameters.num_generations:
-        #print("Generation: {}".format(iteration))
+        print("Generation: {}".format(iteration))
         nth_pop = pop_vector.generate_population(parameters.pop_size)
         nth_pop = score_pop(nth_pop, problem)
 
