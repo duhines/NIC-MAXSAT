@@ -1,6 +1,7 @@
 import os 
 import genetic_alg
 import xlsxwriter
+import pbil as PBIL
 
 def run_as_if_command_line():
 	os.system("python3 genetic_alg.py maxcut-140-630-0.8-34.cnf 500 ts 1c .5 .5 100 ga")
@@ -114,9 +115,68 @@ def test_like_a_normal_person():
 
 	workbook.close()
 
+def test_like_a_robot():
+	datas = []
+	for file in os.listdir("test_problems"):
+		if file[0] == ".":
+			continue
+		else:
+			for  num_geners in range(50, 5050, 100):
+				solution = PBIL.test_pbil(file, 130, 1, 0.17, 0.05, 0.01, num_geners, 'pbil')
+				parameters = {
+					"file_name": file,
+					"pop_size": 130,
+					"num_incl": 1,
+					"alpha": 0.17,
+					"shift": 0.05,
+					"mutation_prob": 0.01,
+					"num_generations": num_geners,
+					"algorithm": "pbil"
+				}
+				data = {
+					"solution": solution,
+					"parameters": parameters
+				}
+				datas.append(data)
+
+	workbook = xlsxwriter.Workbook('num_gens_pbil.xlsx')
+	worksheet = workbook.add_worksheet()
+	file = []
+	pop = []
+	num = []
+	learning_rate = []
+	mu_shift = []
+	mut_prob = []
+	num_gen = []
+	alg = []
+	score = []
+	iter_found = []
+	time = []
+	for item in datas:
+		param = item["parameters"]
+		file.append(param["file_name"])
+		pop.append(param["pop_size"])
+		num.append(param["num_incl"])
+		learning_rate.append(param["alpha"])
+		mu_shift.append(param["shift"])
+		mut_prob.append(param["mutation_prob"])
+		num_gen.append(param["num_generations"])
+		alg.append(param["algorithm"])
+		iter_found.append(item["solution"][0].iteration_found)
+		time.append(item["solution"][1])
+		score.append(item["solution"][0].fitness)
+	array = [file, pop, num, learning_rate, mu_shift, mut_prob, num_gen, alg, score, iter_found, time]
+	row = 0
+
+	for col, data in enumerate(array):
+	    worksheet.write_column(row, col, data)
+
+	workbook.close()
+
+
 def main():	
 	#run_as_if_command_line()
-	test_like_a_normal_person()
-
+	# test_like_a_normal_person()
+	test_like_a_robot()
 
 main()

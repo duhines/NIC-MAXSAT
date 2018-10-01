@@ -1,4 +1,6 @@
 import random
+import time
+import parse_input as parse
 
 FILE = "problems/"
 MAXSAT_PROBLEM = []
@@ -156,6 +158,20 @@ def print_PBIL_solution(curr_best, parameters, problem):
     print("Solution:\n{}".format(prettify(curr_best.individual)))
     print("Found in iteration {}".format(curr_best.iteration_found))
 
+
+def test_pbil(file_name, pop_size, num_incl, alpha, shift, mutation_prob, num_generations, algorithm):
+    """
+    Used to test in conjuntion with the test module.
+    """
+    global MAXSAT_PROBLEM
+    MAXSAT_PROBLEM = parse.return_problem("test_problems/" + file_name)
+    parameters = PBILParameters(file_name, pop_size, num_incl, alpha, shift, mutation_prob, num_generations, algorithm)
+    start = time.time()
+    solution = pbil(MAXSAT_PROBLEM, parameters)
+    finished = time.time()
+    run_time = finished - start
+    #time taken, how good the solution is, generation best solution
+    return (solution, run_time)
 
 def pbil(problem, parameters):
     """
