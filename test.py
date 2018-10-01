@@ -57,30 +57,30 @@ def test_like_a_normal_person():
 		if file[0] == ".":
 			continue
 		else:
-			for select_type in select_options:
-				for c_type in crossover_options:
-					for cross_prob in range(2, 20):
-						print(k/(36*30))
-						k += 1
-						solution = genetic_alg.for_testing(file, 30, select_type, c_type, cross_prob/20, .01, 100, 'ga')
-						parameters = {
-							"file_name": file,
-							"pop_size": 100,
-							"selection_type": select_type,
-							"xover_method": c_type,
-							"xover_prob": cross_prob,
-							"mutation_prob": .01,
-							"num_generations": 200, 
-							"algorithm": "ga"
-						}
-						data = {
-							"solution": solution,
-							"parameters": parameters
-						}
-						fitness = data["solution"][0].individual.fitness
-						datas.append(data)
+			#for select_type in select_options:
+				#for c_type in crossover_options:
+			for cross_prob in range(2, 21):
+				print(k/(36*30))
+				k += 1
+				solution = genetic_alg.for_testing(file, 100, "ts", "uc", cross_prob/20, .01, 100, 'ga')
+				parameters = {
+					"file_name": file,
+					"pop_size": 100,
+					"selection_type": "ts",
+					"xover_method": "uc",
+					"xover_prob": cross_prob,
+					"mutation_prob": .01,
+					"num_generations": 200, 
+					"algorithm": "ga"
+				}
+				data = {
+					"solution": solution,
+					"parameters": parameters
+				}
+				fitness = data["solution"][0].individual.fitness
+				datas.append(data)
 
-	workbook = xlsxwriter.Workbook('popalt.xlsx')
+	workbook = xlsxwriter.Workbook('cross_prob.xlsx')
 	worksheet = workbook.add_worksheet()
 	file = []
 	select = []

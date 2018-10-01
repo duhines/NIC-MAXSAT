@@ -23,7 +23,7 @@ Description:
     The individuals in the population at this stage then progress to the next
     iteration of the algorithm, repeating this process.  After the algorithm 
     has gone through iterations equal to the specified number of generations,
-    the best solution found is printed along with the generation it was found
+    the best solution found is #printed along with the generation it was found
     in, the percentage of the clauses it satified, the name of the MAXSAT
     problem file, the solution of literal values, and the number of variables
     and clauses in the problem.
@@ -378,8 +378,8 @@ class BestSoFar:
             self.individual.solution = individual.solution.copy()
             self.individual.fitness = individual.fitness
             self.iteration_found = iteration
-            print("Found new best with score {} in generation {}".format(
-                self.individual.fitness, self.iteration_found))
+            #print("Found new best with score {} in generation {}".format(
+               # self.individual.fitness, self.iteration_found))
             return True
 
         return False
@@ -407,23 +407,23 @@ def pretty_solution(solution):
 
 def print_solution(best_so_far, parameters):
     """
-    Purpose: Print output to the speficications of the project writeup.
+    Purpose: #print output to the speficications of the project writeup.
     Input: object representing the best solution, object representing the 
         problem parameters
     Return: none
     """
-    print("File: {}".format(parameters.file_name))
+    #print("File: {}".format(parameters.file_name))
     num_literals = MAXSAT_PROBLEM["num_literals"]
     num_clauses = MAXSAT_PROBLEM["num_clauses"]
-    print("Literals count: {}\nClauses count: {}".format(num_literals, num_clauses))
+    #print("Literals count: {}\nClauses count: {}".format(num_literals, num_clauses))
     fitness_div_clauses = best_so_far.individual.fitness / MAXSAT_PROBLEM["num_clauses"]
     percentage_correct = round(fitness_div_clauses * 100, 1)
-    print("Best individual scored {} ({}%)".format(best_so_far.individual.fitness,
-        percentage_correct))
-    print("Difference: {}".format(MAXSAT_PROBLEM["num_clauses"] -
-        best_so_far.individual.fitness))
-    print("Solution:\n{}".format(pretty_solution(best_so_far.individual.solution)))
-    print("Found in iteration {}".format(best_so_far.iteration_found))
+    #print("Best individual scored {} ({}%)".format(best_so_far.individual.fitness,
+     #   percentage_correct))
+    #print("Difference: {}".format(MAXSAT_PROBLEM["num_clauses"] -
+       # best_so_far.individual.fitness))
+    #print("Solution:\n{}".format(pretty_solution(best_so_far.individual.solution)))
+    #print("Found in iteration {}".format(best_so_far.iteration_found))
 
 
 def standard_GA(parameters):
@@ -441,22 +441,22 @@ def standard_GA(parameters):
     
     #arbitrarily initialize best_so_far
     best_so_far = BestSoFar(population.individuals[0], 0)
-    print(best_so_far.individual.get_fitness(MAXSAT_PROBLEM))
+    #print(best_so_far.individual.get_fitness(MAXSAT_PROBLEM))
     if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
-        print("Full Solution!")
-        print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
+        #print("Full Solution!")
+        #print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
         return
 
     iteration = 1
-    print(parameters.num_generations)
+    #print(parameters.num_generations)
     while iteration <= parameters.num_generations:
-        print("Generation: {}".format(iteration))
+        #print("Generation: {}".format(iteration))
         population.next_generation()
         population.score_individuals(best_so_far)
         #check if we have found a solution
         if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
-            print("Full Solution!")
-            print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
+            #print("Full Solution!")
+            #print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
             return
         population.select(parameters.selection_type)        
         population.recombination(parameters.xover_prob, parameters.xover_method)      
@@ -464,7 +464,7 @@ def standard_GA(parameters):
         iteration += 1
 
     population.score_individuals(best_so_far)
-    print_solution(best_so_far, parameters)
+    ##print_solution(best_so_far, parameters)
     return best_so_far
 
 
@@ -486,7 +486,7 @@ def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, m
 
 def main():
     # acquire command line arguments
-    print("running main like a normal person")
+    ##print("running main like a normal person")
     global MAXSAT_PROBLEM
     # Decide how to interpret parameters (based on algo we're using):
     if sys.argv[8] == 'ga':
@@ -496,7 +496,7 @@ def main():
         if parameters.pop_size % 2 != 0:
             parameters.pop_size += 1
     elif sys.argv[8] == 'pbil':
-        print("Ind to incl = {}".format(sys.argv[3]))
+        #print("Ind to incl = {}".format(sys.argv[3]))
         parameters = PBIL.PBILParameters(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
             sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8])
     
