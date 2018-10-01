@@ -441,10 +441,9 @@ def standard_GA(parameters):
     
     #arbitrarily initialize best_so_far
     best_so_far = BestSoFar(population.individuals[0], 0)
-    #print(best_so_far.individual.get_fitness(MAXSAT_PROBLEM))
     if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
-        #print("Full Solution!")
-        #print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
+        print("Full Solution!")
+        print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
         return
 
     iteration = 1
@@ -486,7 +485,6 @@ def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, m
 
 def main():
     # acquire command line arguments
-    ##print("running main like a normal person")
     global MAXSAT_PROBLEM
     # Decide how to interpret parameters (based on algo we're using):
     if sys.argv[8] == 'ga':
