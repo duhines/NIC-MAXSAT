@@ -46,7 +46,7 @@ import random
 import math
 import time
 
-FILE = "testing_GA_vs_PBIL/"
+FILE = "problems/"
 MAXSAT_PROBLEM = []
 
 
