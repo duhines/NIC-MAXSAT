@@ -59,16 +59,16 @@ def test_like_a_normal_person():
 		else:
 			#for select_type in select_options:
 				#for c_type in crossover_options:
-			for cross_prob in range(2, 21):
-				print(k/(36*30))
+			for pop in range(0, 1):
+				print(k/(15*10))
 				k += 1
-				solution = genetic_alg.for_testing(file, 100, "ts", "uc", cross_prob/20, .01, 100, 'ga')
+				solution = genetic_alg.for_testing(file, 100, "bs", "uc", .9, .01, 800, 'ga')
 				parameters = {
 					"file_name": file,
 					"pop_size": 100,
 					"selection_type": "ts",
 					"xover_method": "uc",
-					"xover_prob": cross_prob,
+					"xover_prob": .9,
 					"mutation_prob": .01,
 					"num_generations": 200, 
 					"algorithm": "ga"
@@ -77,10 +77,9 @@ def test_like_a_normal_person():
 					"solution": solution,
 					"parameters": parameters
 				}
-				fitness = data["solution"][0].individual.fitness
 				datas.append(data)
 
-	workbook = xlsxwriter.Workbook('cross_prob.xlsx')
+	workbook = xlsxwriter.Workbook('accuracy_solution2.xlsx')
 	worksheet = workbook.add_worksheet()
 	file = []
 	select = []
