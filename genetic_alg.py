@@ -507,5 +507,6 @@ def main():
     else:
         PBIL.pbil(MAXSAT_PROBLEM, parameters)
 
+#testing
 
-main()
+#main()

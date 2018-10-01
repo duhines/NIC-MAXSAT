@@ -59,18 +59,18 @@ def test_like_a_normal_person():
 		else:
 			for select_type in select_options:
 				for c_type in crossover_options:
-					for pop_size in range(200, 201):
+					for cross_prob in range(2, 20):
 						print(k/(36*30))
 						k += 1
-						solution = genetic_alg.for_testing(file, 100, select_type, c_type, .9, .01, 70, 'ga')
+						solution = genetic_alg.for_testing(file, 30, select_type, c_type, cross_prob/20, .01, 100, 'ga')
 						parameters = {
 							"file_name": file,
 							"pop_size": 100,
 							"selection_type": select_type,
 							"xover_method": c_type,
-							"xover_prob": .9,
+							"xover_prob": cross_prob,
 							"mutation_prob": .01,
-							"num_generations": 70, 
+							"num_generations": 200, 
 							"algorithm": "ga"
 						}
 						data = {
