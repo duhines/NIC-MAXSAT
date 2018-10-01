@@ -35,9 +35,9 @@ class PopulationVector:
         individual = []
         for i in range(pop_size):
             for j in range(self.num_lits):
-                individual.append(random.random() > self.vector[j])
+                individual.append(random.random() < self.vector[j])
             population.append(individual.copy())
-            del individual[:]
+            individual = []
         return population
 
     # A method to update the probability vector based on the N best individuals
@@ -51,13 +51,16 @@ class PopulationVector:
 
     # Mutate pop vector. Mu := P(mutation). Shift := degree of mutation
     def mutate_vector(self, mu, shift):
-        for prob in self.vector:
+        for i in range(len(self.vector)):
             if random.random() < mu:
                 if random.random() < 0.5:
-                    prob += shift
-                else:
-                    prob -= shift
-
+                    self.vector[i] += shift
+                    if self.vector[i] > 1.0:
+                        self.vector[i] = 1.0
+                elif random.random() >= 0.5 and not self.vector[i] <= 0.0:
+                    self.vector[i] -= shift
+                    if self.vector[i] < 0.0:
+                        self.vector[i] = 0.0
 
 class BestSoFar:
     """
@@ -69,16 +72,15 @@ class BestSoFar:
         self.iteration_found = iteration
         self.fitness = 0
 
-    def compare_to_best(self, individual, iteration, problem):
+    def compare_to_best(self, individual, ind_fit, iteration):
         """
         Purpose: Update the best solution so far if the given individual
             has a better solution.
         Input: individual to check against best so far, iteration this individual
-            is from.
+            is from, fitness of this individual
         Return:  Boolean indicating whether the given individual was better than the
             best solution so far.
         """
-        ind_fit = fitness(individual, problem)
         if ind_fit > self.fitness:
             self.individual = individual.copy()
             self.fitness = ind_fit
@@ -133,6 +135,7 @@ def prettify(individual):
             pretty = pretty + "\n"
     return pretty
 
+
 def print_PBIL_solution(curr_best, parameters, problem):
     """
     Purpose: Print output in our nice lil standardized way; see writeup
@@ -154,7 +157,6 @@ def print_PBIL_solution(curr_best, parameters, problem):
     print("Found in iteration {}".format(curr_best.iteration_found))
 
 
-
 def pbil(problem, parameters):
     """
     Purpose: This is a function implementing PBIL optimization of MAXSAT
@@ -168,6 +170,7 @@ def pbil(problem, parameters):
     # The following is the actual PBIL algorithm:
     iteration = 0
     while iteration < parameters.num_generations:
+        #print("Generation: {}".format(iteration))
         nth_pop = pop_vector.generate_population(parameters.pop_size)
         nth_pop = score_pop(nth_pop, problem)
 
@@ -175,7 +178,7 @@ def pbil(problem, parameters):
             curr_best = BestSoFar(nth_pop, iteration)
 
         # Pull out the best individual and update best_so_far if it's better
-        curr_best.compare_to_best(nth_pop[0][0], iteration, problem)
+        curr_best.compare_to_best(nth_pop[0][0], nth_pop[0][1], iteration)
 
         # Update pop vector using CSL approach described in paper:
         pop_vector.update_vector(nth_pop,
@@ -189,7 +192,8 @@ def pbil(problem, parameters):
     # So, we round it out and see if it's better than individuals we've already
     # checked.
     final_pop = [round(x) for x in pop_vector.vector]
-    curr_best.compare_to_best(final_pop, parameters.num_generations, problem)
+    curr_best.compare_to_best(final_pop, fitness(final_pop, problem),
+                              parameters.num_generations)
 
     # Return a tuple containing both the rounded "final pop vector"
     # and the actual pop_vector. If the algo worked well, these should
