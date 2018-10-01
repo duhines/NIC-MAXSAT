@@ -54,7 +54,7 @@ def test_like_a_normal_person():
 							datas.append(data)
 	"""
 	k = 0
-	for file in os.listdir("test_problems"):
+	for file in os.listdir("testy"):
 		if file[0] == ".":
 			continue
 		else:
@@ -116,20 +116,20 @@ def test_like_a_normal_person():
 
 def test_like_a_robot():
 	datas = []
-	for file in os.listdir("test_problems"):
+	for file in os.listdir("testy"):
 		if file[0] == ".":
 			continue
 		else:
-			for  num_geners in range(50, 5050, 100):
-				solution = PBIL.test_pbil(file, 130, 1, 0.17, 0.05, 0.01, num_geners, 'pbil')
+			for mut_deg in range(0, 25):
+				solution = PBIL.test_pbil(file, 130, 1, 0.17, mut_deg/100, 0.05, 300, 'pbil')
 				parameters = {
 					"file_name": file,
 					"pop_size": 130,
 					"num_incl": 1,
 					"alpha": 0.17,
-					"shift": 0.05,
-					"mutation_prob": 0.01,
-					"num_generations": num_geners,
+					"shift": mut_deg / 100,
+					"mutation_prob": 0.05,
+					"num_generations": 100,
 					"algorithm": "pbil"
 				}
 				data = {
@@ -138,7 +138,7 @@ def test_like_a_robot():
 				}
 				datas.append(data)
 
-	workbook = xlsxwriter.Workbook('num_gens_pbil.xlsx')
+	workbook = xlsxwriter.Workbook('mut_deg_pbil.xlsx')
 	worksheet = workbook.add_worksheet()
 	file = []
 	pop = []
@@ -178,4 +178,4 @@ def main():
 	# test_like_a_normal_person()
 	test_like_a_robot()
 
-main()
+#main()

@@ -46,7 +46,7 @@ import random
 import math
 import time
 
-FILE = "problems/"
+FILE = "testing_GA_vs_PBIL/"
 MAXSAT_PROBLEM = []
 
 
@@ -507,6 +507,6 @@ def main():
     else:
         PBIL.pbil(MAXSAT_PROBLEM, parameters)
 
-#testing
 
-#main()
+
+main()

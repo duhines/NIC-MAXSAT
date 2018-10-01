@@ -164,7 +164,7 @@ def test_pbil(file_name, pop_size, num_incl, alpha, shift, mutation_prob, num_ge
     Used to test in conjuntion with the test module.
     """
     global MAXSAT_PROBLEM
-    MAXSAT_PROBLEM = parse.return_problem("test_problems/" + file_name)
+    MAXSAT_PROBLEM = parse.return_problem("testy/" + file_name)
     parameters = PBILParameters(file_name, pop_size, num_incl, alpha, shift, mutation_prob, num_generations, algorithm)
     start = time.time()
     solution = pbil(MAXSAT_PROBLEM, parameters)
