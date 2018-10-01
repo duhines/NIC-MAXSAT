@@ -24,7 +24,7 @@ Description:
     iteration of the algorithm, repeating this process.  After the algorithm 
     has gone through iterations equal to the specified number of generations,
     the best solution found is #printed along with the generation it was found
-    in, the percentage of the clauses it satified, the name of the MAXSAT
+    in, the percentage of the clauses it satisfied, the name of the MAXSAT
     problem file, the solution of literal values, and the number of variables
     and clauses in the problem.
 
