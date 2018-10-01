@@ -24,27 +24,38 @@ Description:
     iteration of the algorithm, repeating this process.  After the algorithm 
     has gone through iterations equal to the specified number of generations,
     the best solution found is #printed along with the generation it was found
-    in, the percentage of the clauses it satified, the name of the MAXSAT
+    in, the percentage of the clauses it satisfied, the name of the MAXSAT
     problem file, the solution of literal values, and the number of variables
     and clauses in the problem.
 
 Notes:
     - To run:
+        If using GA:
         python3 genetic_alg.py <file name> <population size> <selection method>
         <crossover method> <crossover probability> <mutation probability>
-        <number of generations> <use GA/PBIL>
-    - Our file assumes that the MAXSAT file name specified is in a problems
+        <number of generations> <ga>
+
+        If using PBIL:
+        python3 genetic_alg.py <file_name> <population_size> <number_of_individuals
+        for_CSL> <alpha> <mutation_step> <mutation_prob> <num_generations> <pbil>
+
+        Example command line:
+        python3 genetic_alg.py maxcut-140-630-0.7-1.cnf 100 1 0.1 0.01 0.01 1000 pbil
+
+    - Our file assumes that the MAXSAT file name specified is in the folder
+        "problems"
     - To import the MAXSAT problems, the parse_input module is imported.
-    -   
+    - PBIL code is located in pbil.py, which is imported. This file
+        implements GA and also runs the program.
 """
 
-
+# Required libraries
 import parse_input as parse
 import pbil as PBIL
 import sys
 import random
 import math
-import time
+# Used for testing: import time
 
 FILE = "problems/"
 MAXSAT_PROBLEM = []
@@ -52,7 +63,9 @@ MAXSAT_PROBLEM = []
 
 class Parameters:
     """
-    Class used to store the command line arguments conviniently.
+    Purpose: Class used to store the command line arguments conveniently.
+    This class is specific to the GA implementation; PBIL calls
+    pbil.PBILParameters, as it has slightly different parameters.
     """
     def __init__(self, file_name, pop_size, selection_type, xover_method,
         xover_prob, mutation_prob, num_generations, algorithm):
@@ -127,10 +140,10 @@ class Population:
 
     def select(self, selection_method):
         """
-        Purpose: Wrapper method for the selection methods.  Used to call the correct
+        Purpose: Wrapper method for the selection methods. Used to call the correct
             selection method based on the command line argument specifying the selection
             method.
-        Parameters: selection method to use
+        Parameters: Selection method to use
         Return: none
         """
         if selection_method == "rs":
@@ -175,7 +188,7 @@ class Population:
         """
         for index, individual in enumerate(self.individuals):
             for index2, literal in enumerate(self.individuals[index].solution):
-                #coin flip chance 
+                # Mutate with probability specified
                 if random.random() < mutation_prob:
                     self.individuals[index].solution[index2] = not literal
                     individual.fitness = -1
@@ -279,19 +292,18 @@ class Population:
         Return: A tuple of the two two children produced by the single point crossover.  
         """
         crossover_point = random.randint(1, len(individual1.solution) - 1)
-        #first child
+        #first child:
         first_part1 = individual1.solution[:crossover_point].copy()
         first_part2 = individual2.solution[crossover_point:].copy()
         first_child_solution =  first_part1 + first_part2
-        #second child
+        #second child:
         second_part1 = individual2.solution[:crossover_point].copy()
         second_part2 = individual1.solution[crossover_point:].copy()
-        second_child_solution =  second_part1 + second_part2
+        second_child_solution = second_part1 + second_part2
         first_child = Individual(first_child_solution)
         second_child = Individual(second_child_solution)
 
         return (first_child, second_child)
-
 
     def uniform_crossover(self, individual1, individual2):
         """
@@ -306,7 +318,7 @@ class Population:
         """
         breeding_pair = (individual1, individual2)
         first_child = []
-        worse_child = [] #@dgans, @djanderson
+        worse_child = []  # @dgans, @djanderson
 
         for index in range(0, len(breeding_pair[0].solution)):
             flip_for_first = random.random()
@@ -378,8 +390,8 @@ class BestSoFar:
             self.individual.solution = individual.solution.copy()
             self.individual.fitness = individual.fitness
             self.iteration_found = iteration
-            #print("Found new best with score {} in generation {}".format(
-               # self.individual.fitness, self.iteration_found))
+            print("Found new best with score {} in generation {}".format(
+                self.individual.fitness, self.iteration_found))
             return True
 
         return False
@@ -407,7 +419,7 @@ def pretty_solution(solution):
 
 def print_solution(best_so_far, parameters):
     """
-    Purpose: #print output to the speficications of the project writeup.
+    Purpose: print output to the specifications of the project writeup.
     Input: object representing the best solution, object representing the 
         problem parameters
     Return: none
@@ -452,7 +464,7 @@ def standard_GA(parameters):
         print("Generation: {}".format(iteration))
         population.next_generation()
         population.score_individuals(best_so_far)
-        #check if we have found a solution
+        # check if we have found a complete solution (not likely):
         if best_so_far.individual.fitness == MAXSAT_PROBLEM["num_clauses"]:
             print("Full Solution!")
             print_solution(best_so_far, MAXSAT_PROBLEM, parameters)
@@ -467,6 +479,8 @@ def standard_GA(parameters):
     return best_so_far
 
 
+'''
+Function used for testing. Feel free to ignore
 def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, mutation_prob, num_generations, algorithm):
     """
     Used to test in conjuntion with the test module.
@@ -481,6 +495,7 @@ def for_testing(file_name, pop_size, selection_type, xover_method, xover_prob, m
     run_time = finished - start
     #time taken, how good the solution is, generation best solution 
     return (solution, run_time)
+'''
 
 
 def main():
@@ -506,5 +521,5 @@ def main():
         PBIL.pbil(MAXSAT_PROBLEM, parameters)
 
 
-
+# Run main like a normal person:
 main()

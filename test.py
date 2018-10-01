@@ -1,3 +1,7 @@
+"""
+This module was used for testing. 
+"""
+
 import os 
 import genetic_alg
 import xlsxwriter
