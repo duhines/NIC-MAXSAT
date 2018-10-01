@@ -17,3 +17,5 @@ Project 1 for Nature Inspired Computation (fall 2018).  This project compares a 
     - Our file assumes that the MAXSAT file name specified is in the folder
         "problems"
     - To import the MAXSAT problems, the parse_input module is imported.
+    - PBIL code is located in pbil.py, which is imported. This file implements GA and also runs the program.
+
